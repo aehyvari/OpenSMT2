@@ -182,7 +182,6 @@ for (int j = 0; j < cols; j++)
 ASSERT_EQ(ms.MM(H, i+1, j+1), hnf_ref[i][j]);
 }
 
-/*
 
 TEST_F(HNF_test, test_hnf6) {
 int rows = 4;
@@ -237,8 +236,8 @@ ms.MM(U, i+1, j+1) = u[i][j];
 
 int hnf_ref[5][5] = {{5, 0, 0, 0, 0},
                      {0, 60, 0, 0, 0},
-                     {-210, 0, 420, 0, 0},
-                     {-280, 0, 0, 840, 0},
+                     {210, 0, 420, 0, 0},
+                     {560, 0, 0, 840, 0},
                      {630, 0, 0, 0, 2520}};
 
 MId H = ms.getNewMatrix(rows, cols);
@@ -252,7 +251,7 @@ for (int i = 0; i < rows; i++)
 for (int j = 0; j < cols; j++)
 ASSERT_EQ(ms.MM(H, i+1, j+1), hnf_ref[i][j]);
 }
-*/
+
 
 TEST_F(HNF_test, test_hnf8) {
 int rows = 4;
