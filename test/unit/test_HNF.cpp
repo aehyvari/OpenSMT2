@@ -182,77 +182,74 @@ TEST_F(HNF_test, test_hnf5) {
             ASSERT_EQ(ms.MM(H, i+1, j+1), hnf_ref[i][j]);
 }
 
-/*
-
 TEST_F(HNF_test, test_hnf6) {
-int rows = 4;
-int cols = 4;
-MId U = ms.getNewMatrix(rows, cols);
+    int rows = 4;
+    int cols = 4;
+    MId U = ms.getNewMatrix(rows, cols);
 
-int u[4][4] = {{-25, 15, -52, -16},
-               {36, -10, 26, -21},
-               {-44, 35, -66, 98},
-               {20, -12, 72, -30}};
+    int u[4][4] = {{-25, 15, -52, -16},
+                   {36, -10, 26, -21},
+                   {-44, 35, -66, 98},
+                   {20, -12, 72, -30}};
 
-for (int i = 0; i < rows; i++)
-for (int j = 0; j < cols; j++)
-ms.MM(U, i+1, j+1) = u[i][j];
+    for (int i = 0; i < rows; i++)
+        for (int j = 0; j < cols; j++)
+            ms.MM(U, i+1, j+1) = u[i][j];
 
-//HNF
+    //HNF
 
-int hnf_ref[4][4] = {{1, 0, 0, 0},
-                     {0, 1, 0, 0},
-                     {0, 0, 2, 0},
-                     {148191, 959683, 327841, 1083310}};
+    int hnf_ref[4][4] = {{1, 0, 0, 0},
+                         {0, 1, 0, 0},
+                         {0, 0, 2, 0},
+                         {148191, 959683, 327841, 1083310}};
 
-MId H = ms.getNewMatrix(rows, cols);
+    MId H = ms.getNewMatrix(rows, cols);
 
-int dim;
-MId U1 = MId_Undef;
-MId V1 = MId_Undef;
-ms.compute_hnf_v1(U, H, dim, U1, V1);
-cout << "The hnf matrix:" << endl << ms.print(H) << endl;
-for (int i = 0; i < rows; i++)
-for (int j = 0; j < cols; j++)
-ASSERT_EQ(ms.MM(H, i+1, j+1), hnf_ref[i][j]);
+    int dim;
+    MId U1 = MId_Undef;
+    MId V1 = MId_Undef;
+    ms.compute_hnf_v1(U, H, dim, U1, V1);
+    cout << "The hnf matrix:" << endl << ms.print(H) << endl;
+    for (int i = 0; i < rows; i++)
+        for (int j = 0; j < cols; j++)
+            ASSERT_EQ(ms.MM(H, i+1, j+1), hnf_ref[i][j]);
 }
 
 TEST_F(HNF_test, test_hnf7) {
-int rows = 5;
-int cols = 5;
-MId U = ms.getNewMatrix(rows, cols);
+    int rows = 5;
+    int cols = 5;
+    MId U = ms.getNewMatrix(rows, cols);
 
-int u[5][5] = {{25, -300, 1050, -1400, 630},
-               {-300, 4800, -18900, 26880, -12600},
-               {1050, -18900, 79380, -117600, 56700},
-               {-1400, 26880, -117600, 179200, -88200},
-               {630, -12600, 56700, -88200, 44100}};
+    int u[5][5] = {{25, -300, 1050, -1400, 630},
+                   {-300, 4800, -18900, 26880, -12600},
+                   {1050, -18900, 79380, -117600, 56700},
+                   {-1400, 26880, -117600, 179200, -88200},
+                   {630, -12600, 56700, -88200, 44100}};
 
 
-for (int i = 0; i < rows; i++)
-for (int j = 0; j < cols; j++)
-ms.MM(U, i+1, j+1) = u[i][j];
+    for (int i = 0; i < rows; i++)
+        for (int j = 0; j < cols; j++)
+            ms.MM(U, i+1, j+1) = u[i][j];
 
-//HNF
+    //HNF
 
-int hnf_ref[5][5] = {{5, 0, 0, 0, 0},
-                     {0, 60, 0, 0, 0},
-                     {-210, 0, 420, 0, 0},
-                     {-280, 0, 0, 840, 0},
-                     {630, 0, 0, 0, 2520}};
+    int hnf_ref[5][5] = {{5, 0, 0, 0, 0},
+                         {0, 60, 0, 0, 0},
+                         {210, 0, 420, 0, 0},
+                         {560, 0, 0, 840, 0},
+                         {630, 0, 0, 0, 2520}};
 
-MId H = ms.getNewMatrix(rows, cols);
+    MId H = ms.getNewMatrix(rows, cols);
 
-int dim;
-MId U1 = MId_Undef;
-MId V1 = MId_Undef;
-ms.compute_hnf_v1(U, H, dim, U1, V1);
-cout << "The hnf matrix:" << endl << ms.print(H) << endl;
-for (int i = 0; i < rows; i++)
-for (int j = 0; j < cols; j++)
-ASSERT_EQ(ms.MM(H, i+1, j+1), hnf_ref[i][j]);
+    int dim;
+    MId U1 = MId_Undef;
+    MId V1 = MId_Undef;
+    ms.compute_hnf_v1(U, H, dim, U1, V1);
+    cout << "The hnf matrix:" << endl << ms.print(H) << endl;
+    for (int i = 0; i < rows; i++)
+        for (int j = 0; j < cols; j++)
+            ASSERT_EQ(ms.MM(H, i+1, j+1), hnf_ref[i][j]);
 }
-*/
 
 TEST_F(HNF_test, test_hnf8) {
     int rows = 4;
@@ -325,5 +322,4 @@ TEST_F(HNF_test, test_hnf9) {
         for (int j = 0; j < cols; j++)
             ASSERT_EQ(ms.MM(H, i+1, j+1), hnf_ref[i][j]);
 }
-
 

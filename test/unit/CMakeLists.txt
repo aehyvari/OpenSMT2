@@ -92,3 +92,4 @@ target_sources(SubstitutionBreakerTest
 
 target_link_libraries(SubstitutionBreakerTest api_static gtest gtest_main)
 gtest_add_tests(TARGET SubstitutionBreakerTest)
+

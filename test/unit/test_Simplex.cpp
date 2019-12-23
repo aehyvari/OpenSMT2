@@ -62,7 +62,7 @@ TEST(Simplex_test, test_ops_in_Simplex)
     Delta sum = s.getValuation(y_minus_x);
     cout << sum.R() + sum.D() * d << endl;
 
-    s.assertBoundOnVar(x, x_strict_0.lb);
+    s.assertBoundOnVar(x, x_strict_0.lb); //PS. enabling bounds, makes bounds active
     s.assertBoundOnVar(y, y_strict_0.lb);
 
     s.pushBacktrackPoint();

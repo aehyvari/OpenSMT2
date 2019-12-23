@@ -619,6 +619,8 @@ LAMatrixStore::compute_hnf(MId &H, const MId A){//, int &dim) {//maybe no need f
 
     LAMatrix &Hm = operator[](H);
 
+    LAMatrix &Am = operator[](A);
+
     if (H != A)
         setMatrix(H, A);
 

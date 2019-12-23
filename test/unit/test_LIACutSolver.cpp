@@ -16,50 +16,87 @@ TEST(LIACutSolver_test, test_computeEqualityBasis)
 
 
     //our system
-    //y >= x + 0.5
-    //y >= -10x + 20
-    //y <= x - 5
+    //2x-y-3<=0;
+    //x+2y-4<=0;
+    // x>=2
 
     LVRef x = vs.getNewVar();
     LVRef y = vs.getNewVar();
 
-    //y - x
-    LVRef y_minus_x = vs.getNewVar();
-    auto p_y_minus_x = std::unique_ptr<Polynomial>(new Polynomial());
+    //2x-y
+    LVRef two_x_minus_y = vs.getNewVar();
+    auto p_two_x_minus_y = std::unique_ptr<Polynomial>(new Polynomial());
 
-    p_y_minus_x->addTerm(x, -1);
-    p_y_minus_x->addTerm(y, 1);
+    p_two_x_minus_y->addTerm(x, 2);
+    p_two_x_minus_y->addTerm(y, -1);
 
-    //-y - 10x
-    LVRef minus_y_minus_ten_x = vs.getNewVar();
-    auto p_minus_y_minus_ten_x = std::unique_ptr<Polynomial>(new Polynomial());
+    //cout << p_y_minus_x << endl;
+    ASSERT_TRUE(p_two_x_minus_y->contains(x));
+    ASSERT_TRUE(p_two_x_minus_y->contains(y));
+    EXPECT_EQ(p_two_x_minus_y->getCoeff(x), 2);
+    EXPECT_EQ(p_two_x_minus_y->getCoeff(y), -1);
 
-    p_minus_y_minus_ten_x->addTerm(x, -10);
-    p_minus_y_minus_ten_x->addTerm(y, -1);
+    //x+2y
+    LVRef x_plus_two_y = vs.getNewVar();
+    auto p_x_plus_two_y = std::unique_ptr<Polynomial>(new Polynomial());
 
-    //2x - 2y
-    LVRef two_x_minus_two_y = vs.getNewVar();
-    auto p_two_x_minus_two_y = std::unique_ptr<Polynomial>(new Polynomial());
+    p_x_plus_two_y->addTerm(x, 1);
+    p_x_plus_two_y->addTerm(y, 2);
 
-    p_two_x_minus_two_y->addTerm(y, -2);
-    p_two_x_minus_two_y->addTerm(x, 2);
+    ASSERT_TRUE(p_x_plus_two_y->contains(x));
+    ASSERT_TRUE(p_x_plus_two_y->contains(y));
+    EXPECT_EQ(p_x_plus_two_y->getCoeff(x), 1);
+    EXPECT_EQ(p_x_plus_two_y->getCoeff(y), 2);
+
+    //-x
+    LVRef minus_x = vs.getNewVar();
+    auto p_minus_x = std::unique_ptr<Polynomial>(new Polynomial());
+
+    p_minus_x->addTerm(x, -1);
+    //p_minus_x->addTerm(y, 0);
+
+    ASSERT_TRUE(p_minus_x->contains(x));
+    //ASSERT_TRUE(p_minus_x->contains(y));
+    //EXPECT_EQ(p_minus_x->getCoeff(y), 0);
+    EXPECT_EQ(p_minus_x->getCoeff(x), -1);
 
     LABoundStore bs(vs);
 
-    LABoundStore::BoundInfo y_minus_x_nostrict_m5 = bs.allocBoundPair(y_minus_x, -5, false);  // y - x + 5 <= 0
-    LABoundStore::BoundInfo two_x_minus_two_y_nostrict_m1 = bs.allocBoundPair(two_x_minus_two_y, -1, false);    // 2x - 2y + 1 <= 0
-    LABoundStore::BoundInfo minus_y_minus_ten_x_nostrict_m20  = bs.allocBoundPair(minus_y_minus_ten_x, -20, false);   // -y - 10x + 20 <= 0
+    LABoundStore::BoundInfo two_x_minus_y_nostrict_3 = bs.allocBoundPair(two_x_minus_y, 3, false);  // 2x - y - 3 <= 0
+    LABoundStore::BoundInfo x_plus_two_y_nostrict_4 = bs.allocBoundPair(x_plus_two_y, 4, false);    // x + 2y -4 <= 0
+    LABoundStore::BoundInfo minus_x_nostrict_m2 = bs.allocBoundPair(minus_x, -2, false); // -x <= -2
 
     bs.buildBounds();
+    int t = bs.getBoundListSize(x_plus_two_y);
+    cout << t << endl; //why 4? what this gives? minus plus infinit, and upper lower bounds
+    int t1 = bs.nVars();
+    cout << t1 << endl; //why 5? all vs.getnewVar
+    char* t2 = bs.printBounds(x_plus_two_y);
+    cout << t2 << endl;
+    free(t2); //deallocate space taken by char*
+
+    //EXPECT_EQ(bs.size(), 0);
+
+    ///TODO get a constraint system that reflects our planes graph and work out examples of first case and second case
 
     //Simplex s(c, m, bs);
     auto s = std::unique_ptr<Simplex>(new Simplex(bs));
 
     s->newNonbasicVar(x);
     s->newNonbasicVar(y);
-    s->newRow(y_minus_x, std::move(p_y_minus_x));
-    s->newRow(two_x_minus_two_y, std::move(p_two_x_minus_two_y));
-    s->newRow(minus_y_minus_ten_x, std::move(p_minus_y_minus_ten_x));
+    s->newRow(two_x_minus_y, std::move(p_two_x_minus_y));
+    s->newRow(x_plus_two_y, std::move(p_x_plus_two_y));
+    s->newRow(minus_x, std::move(p_minus_x));
+
+    s->initModel();
+
+    //1 case: if all have non-strict bounds, and upper bound in this case, then it is SAT with single solution
+
+    s->assertBoundOnVar(two_x_minus_y, two_x_minus_y_nostrict_3.lb); //PS. enabling bounds, makes bounds active
+    s->assertBoundOnVar(x_plus_two_y, x_plus_two_y_nostrict_4.lb);
+    s->assertBoundOnVar(minus_x, minus_x_nostrict_m2.lb);
+
+    //2 case:  if at least one of them has strict bound, then UNSAT, where expalantion says that it implied from others
 
     Simplex::Explanation explanation = s->checkSimplex();
     ASSERT_EQ(explanation.size(), 0); //this property has to be failed as the system is UNSAT then explanation size has to be >0
