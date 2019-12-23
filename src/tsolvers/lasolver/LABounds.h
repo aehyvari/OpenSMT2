@@ -120,7 +120,7 @@ private:
     vec<LABoundListRef> var_bound_lists;
     LAVarStore &lvstore;
 public:
-    LABoundStore(LAVarStore &lvstore) : lvstore(lvstore) {}
+    LABoundStore(LAVarStore &lvstore) : lvstore(lvstore) {} //PS. curently stored bounds should be in model
     void buildBounds();
     void updateBound(BoundInfo bi); // Update a single bound.
 //    inline LABoundRef getLowerBound(const LVRef v) const { return bla[lva[v].getBounds()][lva[v].lbound()]; }

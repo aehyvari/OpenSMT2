@@ -19,6 +19,7 @@ TEST(LIACutSolver_test, test_computeEqualityBasis)
     //2x-y-3<=0;
     //x+2y-4<=0;
     // x>=2
+    // -x + 2 <=0
 
     LVRef x = vs.getNewVar();
     LVRef y = vs.getNewVar();
@@ -92,14 +93,16 @@ TEST(LIACutSolver_test, test_computeEqualityBasis)
 
     //1 case: if all have non-strict bounds, and upper bound in this case, then it is SAT with single solution
 
-    s->assertBoundOnVar(two_x_minus_y, two_x_minus_y_nostrict_3.lb); //PS. enabling bounds, makes bounds active
-    s->assertBoundOnVar(x_plus_two_y, x_plus_two_y_nostrict_4.lb);
-    s->assertBoundOnVar(minus_x, minus_x_nostrict_m2.lb);
+    s->assertBoundOnVar(two_x_minus_y, two_x_minus_y_nostrict_3.ub); //PS. enabling bounds, makes bounds active
+    s->assertBoundOnVar(x_plus_two_y, x_plus_two_y_nostrict_4.ub);
+    s->assertBoundOnVar(minus_x, minus_x_nostrict_m2.ub);
 
     //2 case:  if at least one of them has strict bound, then UNSAT, where expalantion says that it implied from others
 
     Simplex::Explanation explanation = s->checkSimplex();
     ASSERT_EQ(explanation.size(), 0); //this property has to be failed as the system is UNSAT then explanation size has to be >0
+    s->printModelState();
+
 
 }
 
