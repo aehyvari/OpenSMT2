@@ -101,7 +101,7 @@ TEST(LIACutSolver_test, test_computeEqualityBasis)
 
     Simplex::Explanation explanation = s->checkSimplex();
     ASSERT_EQ(explanation.size(), 0); //this property has to be failed as the system is UNSAT then explanation size has to be >0
-    s->printModelState();
+//    s->printModelState();
 
 
 }
