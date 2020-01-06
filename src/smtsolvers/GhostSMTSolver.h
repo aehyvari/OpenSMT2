@@ -24,6 +24,7 @@ protected:
     void cancelUntil       (int level) override;
     Var  newVar            (bool polarity, bool dvar) override;
     void verifyModel       () override;
+    bool satisfied         (const Clause& c) const override;
 public:
     GhostSMTSolver(SMTConfig& c, THandler& h) : SimpSMTSolver(c, h) {}
     void garbageCollect() override;

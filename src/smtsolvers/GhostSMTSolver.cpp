@@ -5,6 +5,13 @@
 #include "GhostSMTSolver.h"
 #include <utility>
 
+bool GhostSMTSolver::satisfied(const Clause& c) const
+{
+    if (locked(c))
+        return true;
+    return SimpSMTSolver::satisfied(c);
+}
+
 bool GhostSMTSolver::isGhost(Lit l)
 {
     if (!theory_handler.isTheoryTerm(var(l))) return false;
