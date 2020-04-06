@@ -99,6 +99,7 @@ public:
     PushFrame(PushFrame& pf);
     PushFrame() : id(FrameId_Undef), root(PTRef_Undef) {} // For pushing into vecs we need a default.
     PushFrame operator= (PushFrame& other);
+    ~PushFrame() { while (formulas.size() > 0) formulas.pop(); }
  private:
     PushFrame(uint32_t id) : id({id}), root(PTRef_Undef) {}
 };

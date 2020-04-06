@@ -89,6 +89,11 @@ class MainSolver
             if (simplified_until > size()) { simplified_until = size(); }
         }
 
+        ~PushFramesWrapper() {
+            while (frames.size() > 0)
+                frames.pop();
+        }
+
     };
 
     Logic&              logic;
