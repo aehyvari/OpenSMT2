@@ -6,17 +6,16 @@ int
 main(int argc, char** argv)
 {
 
-    if (argc != 5)
+    if (argc != 4)
     {
-        printf("Computes a <op> b on bit width <bw>\n");
-        printf("Usage: %s <bw> <op> <a> <b>\n", argv[0]);
+        printf("Computes the model for a <op> x on bit width <bw>\n");
+        printf("Usage: %s <bw> <op> <a>\n", argv[0]);
         return 1;
     }
     char* op = argv[2];
-    //int c1_int = atoi(argv[3]);
-    //int c2_int = atoi(argv[4]);
+
     const char* c1_str = argv[3];
-    const char* c2_str = argv[4];
+    const char* x_str = strdup("x");
     int bw = atoi(argv[1]);
 
     SMTConfig c;
@@ -27,67 +26,59 @@ main(int argc, char** argv)
     MainSolver& mainSolver = *mainSolver_;
     BVLogic& logic = cuftheory->getLogic();
 
-    PTRef a = logic.mkBVNumVar("a");
-    PTRef b = logic.mkBVNumVar("b");
-    //PTRef c1 = logic.mkBVConst(c1_int);
+    PTRef x = logic.mkBVNumVar(x_str);
+    PTRef unit = logic.mkBVConst("1");
+
     PTRef c1 = logic.mkBVConst(c1_str);
-    //PTRef c2 = logic.mkBVConst(c2_int);
-    PTRef c2 = logic.mkBVConst(c2_str);
 
-    PTRef eq1 = logic.mkBVEq(a, c1);
-    PTRef eq2 = logic.mkBVEq(b, c2);
-
-    //printf("Computing %d (%s) %s %d (%s)\n", c1_int, logic.printTerm(c1), op, c2_int, logic.printTerm(c2));
-    printf("Computing %s (%s) %s %s (%s)\n", c1_str, logic.printTerm(c1), op, c2_str, logic.printTerm(c2));
+    printf("Computing %s (%s) %s %s (%s)\n", c1_str, logic.printTerm(c1), op, x_str, logic.printTerm(x));
 
 
     PTRef op_tr;
     if (strcmp(op, "/") == 0)
-        op_tr = logic.mkBVDiv(a, b);
+        op_tr = logic.mkBVDiv(c1, x);
     else if (strcmp(op, "*") == 0)
-        op_tr = logic.mkBVTimes(a, b);
+        op_tr = logic.mkBVTimes(c1, x);
     else if (strcmp(op, "+") == 0)
-        op_tr = logic.mkBVPlus(a, b);
+        op_tr = logic.mkBVPlus(c1, x);
     else if (strcmp(op, "-") == 0)
-        op_tr = logic.mkBVMinus(a, b);
+        op_tr = logic.mkBVMinus(c1, x);
     else if (strcmp(op, "s<") == 0)
-        op_tr = logic.mkBVSlt(a, b);
+        op_tr = logic.mkBVSlt(c1, x);
     else if (strcmp(op, "s<=") == 0)
-        op_tr = logic.mkBVSleq(a, b);
+        op_tr = logic.mkBVSleq(c1, x);
     else if (strcmp(op, "u<=") == 0)
-        op_tr = logic.mkBVUleq(a, b);
+        op_tr = logic.mkBVUleq(c1, x);
+    else if (strcmp(op, "u>=") == 0)
+        op_tr = logic.mkBVUleq(x, c1);
     else if (strcmp(op, "s>=") == 0)
-        op_tr = logic.mkBVSgeq(a, b);
+        op_tr = logic.mkBVSgeq(c1, x);
     else if (strcmp(op, "s>") == 0)
-        op_tr = logic.mkBVSgt(a, b);
+        op_tr = logic.mkBVSgt(c1, x);
     else if (strcmp(op, "<<") == 0)
-        op_tr = logic.mkBVLshift(a, b);
+        op_tr = logic.mkBVLshift(c1, x);
     else if (strcmp(op, "a>>") == 0)
-        op_tr = logic.mkBVARshift(a, b);
+        op_tr = logic.mkBVARshift(c1, x);
     else if (strcmp(op, "l>>") == 0)
-        op_tr = logic.mkBVLRshift(a, b);
+        op_tr = logic.mkBVLRshift(c1, x);
     else if (strcmp(op, "%") == 0)
-        op_tr = logic.mkBVMod(a, b);
+        op_tr = logic.mkBVMod(c1, x);
     else if (strcmp(op, "&") == 0)
-        op_tr = logic.mkBVBwAnd(a, b);
+        op_tr = logic.mkBVBwAnd(c1, x);
     else if (strcmp(op, "|") == 0)
-        op_tr = logic.mkBVBwOr(a, b);
+        op_tr = logic.mkBVBwOr(c1, x);
     else if (strcmp(op, "=") == 0)
-        op_tr = logic.mkBVEq(a, b);
+        op_tr = logic.mkBVEq(c1, x);
     else if (strcmp(op, "&&") == 0)
-        op_tr = logic.mkBVLand(a, b);
+        op_tr = logic.mkBVLand(c1, x);
     else if (strcmp(op, "^") == 0)
-        op_tr = logic.mkBVBwXor(a, b);
+        op_tr = logic.mkBVBwXor(c1, x);
     else if (strcmp(op, "==") == 0)
-        op_tr = logic.mkBVEq(a, b);
+        op_tr = logic.mkBVEq(c1, x);
     else {
-        printf("Unknown operator: %s", op);
+        printf("Unknown operator: %s\n", op);
         return 1;
     }
-
-    PTRef d = logic.mkBVNumVar("d");
-
-    PTRef eq3 = logic.mkBVEq(op_tr, d);
 
     vec<PtAsgn> asgns;
     vec<PTRef> foo;
@@ -96,10 +87,10 @@ main(int argc, char** argv)
     BitBlaster bbb(id, c, mainSolver, logic, asgns, foo);
     BVRef output;
 
-    lbool stat;
-    stat = bbb.insertEq(eq1, output);
-    bbb.insertEq(eq2, output);
-    bbb.insertEq(eq3, output);
+    lbool stat = bbb.insertEq(logic.mkBVEq(op_tr, unit), output);
+    if (stat == l_False)  {
+        cout << "Trivially unsat" << endl;
+    }
 
     char* msg;
     mainSolver.insertFormula(logic.getTerm_true(), &msg);
@@ -111,7 +102,7 @@ main(int argc, char** argv)
     if (r == s_True) {
         printf("sat\n");
         bbb.computeModel();
-        ValPair v = bbb.getValue(d);
+        ValPair v = bbb.getValue(x);
         char* bin;
         opensmt::wordToBinary(atoi(v.val), bin, bw);
         printf("%s (%s)\n", v.val, bin);
