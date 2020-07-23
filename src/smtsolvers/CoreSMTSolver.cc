@@ -95,10 +95,11 @@ CoreSMTSolver::CoreSMTSolver(SMTConfig & c, THandler& t )
     , learnts_size(0) , all_learnts(0)
     , learnt_theory_conflicts(0)
     , top_level_lits        (0)
+    , largestVarNum         (0)
     , forced_split          (lit_Undef)
 
     , ok                    (true)
-    , n_clauses(0)
+    , n_clauses             (0)
     , cla_inc               (1)
     , var_inc               (1)
     , watches               (WatcherDeleted(ca))
@@ -280,6 +281,9 @@ bool CoreSMTSolver::addOriginalClause_(const vec<Lit> & _ps)
 bool CoreSMTSolver::addOriginalClause_(const vec<Lit> & _ps, std::pair<CRef, CRef> & inOutCRefs)
 {
     assert(decisionLevel() == 0);
+
+    addClauseToCnf(_ps);
+
     inOutCRefs = std::make_pair(CRef_Undef, CRef_Undef);
     if (!isOK()) { return false; }
     bool logsProofForInterpolation = this->logsProofForInterpolation();
@@ -1868,8 +1872,21 @@ void CoreSMTSolver::declareVarsToTheories()
     }
 }
 
+/**
+ * Dump the original clauses to the stream given as argument.  Stream
+ * must be initially open.
+ */
+
+void CoreSMTSolver::dumpCnfToFile(ofstream& of) const {
+    of << "p cnf " + std::to_string(largestVarNum) + " " + std::to_string(cnfLines.size()) + "\n";
+    for (auto s : cnfLines) {
+        of << s;
+    }
+}
+
 lbool CoreSMTSolver::solve_()
 {
+
 //    opensmt::PrintStopWatch watch("solve time", cerr);
 
     for (Lit l : this->assumptions) {
@@ -2207,6 +2224,21 @@ void CoreSMTSolver::updateSplitState()
             if (split_units == spm_decisions) split_next = decisions + split_midtune;
         }
     }
+}
+
+void CoreSMTSolver::addClauseToCnf(const vec<Lit> &clause) {
+    string c;
+    for (int i = 0; i < clause.size(); i++){
+        c.append(sign(clause[i]) ? "-" : "");
+        c.append(std::to_string(var(clause[i])+1));
+        c.append(" ");
+
+        if (largestVarNum < var(clause[i])+1) {
+            largestVarNum = var(clause[i])+1;
+        }
+    }
+    c.append("0\n");
+    cnfLines.push_back(c);
 }
 
 #ifdef STATISTICS

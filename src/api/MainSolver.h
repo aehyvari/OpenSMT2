@@ -213,6 +213,8 @@ class MainSolver
     bool readFormulaFromFile(const char *file);
 
     PTRef getPrevQuery() const { return prev_query; }
+
+    void dumpInitialCnfToFile(const char *file) const;
 };
 
 #endif //

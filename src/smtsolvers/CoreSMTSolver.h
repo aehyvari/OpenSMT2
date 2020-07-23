@@ -404,6 +404,9 @@ public:
     vec<SplitData> splits;
     vec<vec<Lit> > split_assumptions;
 
+    void dumpCnfToFile(ofstream& of) const;
+    std::vector<std::string> cnfLines;
+    int largestVarNum;
 protected:
     Lit forced_split; // If theory solver tells that we must split the instance, a literal with unknown value is inserted here for the splitting heuristic
     int processed_in_frozen; // The index in Theory's frozen vec until which frozennes has been processed
@@ -649,6 +652,8 @@ protected:
 
     //=================================================================================================
     // Added Code
+    // Original Cnf dumping
+    void addClauseToCnf(const vec<Lit> &clause);
 
 public:
 
@@ -659,10 +664,10 @@ public:
     void     printClause      ( Clause& );
     //void     printClause      ( vec< Lit > & );
 
-	void   populateClauses  (vec<PTRef> & clauses, const vec<CRef> & crefs, unsigned int limit = std::numeric_limits<unsigned int>::max());
-	void   populateClauses  (vec<PTRef> & clauses, const vec<Lit> & lits);
-	char * printCnfClauses  ();
-	char * printCnfLearnts  ();
+        void   populateClauses  (vec<PTRef> & clauses, const vec<CRef> & crefs, unsigned int limit = std::numeric_limits<unsigned int>::max());
+        void   populateClauses  (vec<PTRef> & clauses, const vec<Lit> & lits);
+        char * printCnfClauses  ();
+        char * printCnfLearnts  ();
 
     bool    smtSolve         ( );             // Solve
 
@@ -1086,54 +1091,54 @@ inline void CoreSMTSolver::printClause(const C& c)
 
 inline void CoreSMTSolver::populateClauses(vec<PTRef> & clauses, const vec<CRef> & crefs, unsigned int limit)
 {
-	Logic& logic = theory_handler.getLogic();
-	for (int i = 0; i < crefs.size(); i++) {
-		Clause& clause = ca[crefs[i]];
-		if (clause.size() > limit) {
-			continue;
-		}
-		vec<PTRef> literals;
-		for (unsigned j = 0; j < clause.size(); j++) {
-			Lit& literal = clause[j];
-			Var v = var(literal);
-			PTRef ptr = theory_handler.varToTerm(v);
-			if (sign(literal)) ptr = logic.mkNot(ptr);
-			literals.push(ptr);
-		}
-		clauses.push(logic.mkOr(literals));
-	}
+        Logic& logic = theory_handler.getLogic();
+        for (int i = 0; i < crefs.size(); i++) {
+                Clause& clause = ca[crefs[i]];
+                if (clause.size() > limit) {
+                        continue;
+                }
+                vec<PTRef> literals;
+                for (unsigned j = 0; j < clause.size(); j++) {
+                        Lit& literal = clause[j];
+                        Var v = var(literal);
+                        PTRef ptr = theory_handler.varToTerm(v);
+                        if (sign(literal)) ptr = logic.mkNot(ptr);
+                        literals.push(ptr);
+                }
+                clauses.push(logic.mkOr(literals));
+        }
 }
 
 inline void CoreSMTSolver::populateClauses(vec<PTRef> & clauses, const vec<Lit> &lits) {
-	Logic& logic = theory_handler.getLogic();
-	for (int i = 0; i < lits.size(); i++) {
-		const Lit& literal = lits[i];
-		Var v = var(literal);
-		PTRef ptr = theory_handler.varToTerm(v);
-		if (sign(literal)) ptr = logic.mkNot(ptr);
-		vec<PTRef> clause;
-		clause.push(ptr);
-		clauses.push(logic.mkOr(clause));
-	}
+        Logic& logic = theory_handler.getLogic();
+        for (int i = 0; i < lits.size(); i++) {
+                const Lit& literal = lits[i];
+                Var v = var(literal);
+                PTRef ptr = theory_handler.varToTerm(v);
+                if (sign(literal)) ptr = logic.mkNot(ptr);
+                vec<PTRef> clause;
+                clause.push(ptr);
+                clauses.push(logic.mkOr(clause));
+        }
 }
 
 inline char * CoreSMTSolver::printCnfClauses()
 {
-	vec<PTRef> cnf_clauses;
-	this->populateClauses(cnf_clauses, clauses);
-	
-	Logic& logic = theory_handler.getLogic();
-	return logic.printTerm(logic.mkAnd(cnf_clauses));
+        vec<PTRef> cnf_clauses;
+        this->populateClauses(cnf_clauses, clauses);
+        
+        Logic& logic = theory_handler.getLogic();
+        return logic.printTerm(logic.mkAnd(cnf_clauses));
 }
 
 inline char * CoreSMTSolver::printCnfLearnts()
 {
-	vec<PTRef> cnf_clauses;
-	this->populateClauses(cnf_clauses, learnts, 2);
-	//this->populateClauses(cnf_clauses, trail);
-	
-	Logic& logic = theory_handler.getLogic();
-	return logic.printTerm(logic.mkAnd(cnf_clauses));
+        vec<PTRef> cnf_clauses;
+        this->populateClauses(cnf_clauses, learnts, 2);
+        //this->populateClauses(cnf_clauses, trail);
+        
+        Logic& logic = theory_handler.getLogic();
+        return logic.printTerm(logic.mkAnd(cnf_clauses));
 }
 
 

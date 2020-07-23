@@ -434,3 +434,10 @@ MainSolver::readFormulaFromFile(const char *file)
     return true;
 }
 
+void MainSolver::dumpInitialCnfToFile(const char *file) const
+{
+    std::ofstream os;
+    os.open(file, std::ios_base::out | std::ios_base::trunc);
+    smt_solver->dumpCnfToFile(os);
+    os.close();
+}
