@@ -391,7 +391,7 @@ BVLogic::mkBVUlt(const PTRef arg1, const PTRef arg2)
 {
     assert(hasSortBVNUM(arg1));
     assert(hasSortBVNUM(arg2));
-    return mkBVNeg(mkBVUgeq(arg1, arg2));
+    return mkBVUleq(arg1, mkBVMinus(arg2, term_BV_ONE));
 }
 
 PTRef
