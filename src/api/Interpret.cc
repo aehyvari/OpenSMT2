@@ -454,7 +454,11 @@ PTRef Interpret::parseTerm(const ASTNode& term, LetRecords& letRecords) {
             return PTRef_Undef;
         }
         if (tr == PTRef_Undef) {
-            notify_formatted(true, "No such symbol %s: %s", name, msg);
+            if (msg == nullptr) {
+                notify_formatted(true, "No such symbol %s", name);
+            } else {
+                notify_formatted(true, "No such symbol %s: %s", name, msg);
+            }
             comment_formatted("The symbol %s is not defined for the following sorts:", name);
             for (int j = 0; j < args.size(); j++)
                 comment_formatted("arg %d: %s", j, logic->getSortName(logic->getSortRef(args[j]) )); //store.getName(symstore[ptstore[args[j]].symb()].rsort()));
