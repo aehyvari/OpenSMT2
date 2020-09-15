@@ -1,14 +1,14 @@
 #include "UFTHandler.h"
 #include "TreeOps.h"
-#include "InterpolatingEgraph.h"
 #include "Egraph.h"
 
 UFTHandler::UFTHandler(SMTConfig & c, Logic & l)
     : TSolverHandler(c)
     , logic(l)
 {
-    egraph = config.produce_inter() > 0 ? new InterpolatingEgraph(config, logic)
-            : new Egraph(config, logic);
+//    egraph = config.produce_inter() > 0 ? new InterpolatingEgraph(config, logic)
+//            : new Egraph(config, logic);
+    egraph = new Egraph(config, logic);
 
     SolverId my_id = egraph->getId();
     tsolvers[my_id.id] = egraph;
@@ -34,8 +34,6 @@ lbool UFTHandler::getPolaritySuggestion(PTRef p) const {
 
 PTRef UFTHandler::getInterpolant(const ipartitions_t& mask, map<PTRef, icolor_t> *labels)
 {
-    InterpolatingEgraph* iegraph = dynamic_cast<InterpolatingEgraph*>(egraph);
-    assert(iegraph);
-    return iegraph->getInterpolant(mask, labels);
+    throw std::logic_error("Not suppoorted!");
 }
 
