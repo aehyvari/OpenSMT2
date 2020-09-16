@@ -273,6 +273,11 @@ void IteToSwitch::constructSwitches() {
 
 PTRef IteToSwitch::makeSwitch(PTRef root) {
     ite::Dag dag = iteDag.getReachableSubGraph(logic, root);
+    // Debug
+    auto num_ites = dag.getNumBooleanItes(root, logic);
+    std::cout << "; Num boolean ites: " << num_ites.first << std::endl;
+    std::cout << "; Num total ites: " << num_ites.second << std::endl;
+    // End debug
     dag.annotateWithParentInfo(root);
     vec<ite::CondValPair> root_switches = dag.getCondValPairs(logic);
     vec<PTRef> cases;

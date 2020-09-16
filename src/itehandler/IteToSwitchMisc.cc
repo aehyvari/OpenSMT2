@@ -11,6 +11,49 @@ void IteToSwitch::printDagToFile(const std::string &fname, const ite::Dag &dag) 
     fs.close();
 }
 
+std::pair<int, int> ite::Dag::getNumBooleanItes(PTRef root, const Logic& logic) const {
+    int num_bool_ites = 0;
+    int num_total_ites = 0;
+    vec<NodeRef> queue;
+    queue.push(nodes[root]);
+    vec<type> flag;
+    flag.growTo(na.getNumNodes());
+
+    while (queue.size() != 0) {
+        NodeRef nr = queue.last();
+        const Node& n = na[nr];
+        if (flag[n.getId()] == type::black) {
+            queue.pop();
+            continue;
+        }
+
+        bool unprocessed_children = false;
+
+        for (auto ch : {n.getFalseChild(), n.getTrueChild()}) {
+            if (ch == NodeRef_Undef) {
+                continue; // could be break as well.
+            }
+            const Node &c = na[ch];
+            if (flag[c.getId()] == type::white) {
+                queue.push(ch);
+                flag[c.getId()] = type::gray;
+                unprocessed_children = true;
+            }
+        }
+        if (unprocessed_children) {
+            continue;
+        }
+
+        flag[n.getId()] = type::black;
+        if (!n.isLeaf() && logic.hasSortBool(n.getTerm())) {
+            num_bool_ites++;
+        } else {
+            num_total_ites++;
+        }
+    }
+    return {num_bool_ites, num_total_ites};
+}
+
 void ite::Dag::writeDagToStream(std::ostream &out) const {
     std::string annotations_str;
     std::string edges_str;

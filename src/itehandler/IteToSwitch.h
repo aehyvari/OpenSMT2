@@ -140,6 +140,7 @@ namespace ite {
         vec<ite::CondValPair> getCondValPairs(Logic& logic) const;
         // Debug
         void writeDagToStream(std::ostream&) const;
+        std::pair<int,int> getNumBooleanItes(PTRef root, const Logic& logic) const;
     };
 }
 
@@ -156,7 +157,7 @@ protected:
     void constructSwitches();
 
 public:
-    explicit IteToSwitch(Logic& l, PTRef root) : logic(l), iteDag(constructIteDag(root, l)) { constructSwitches(); }
+    IteToSwitch(Logic& l, PTRef root) : logic(l), iteDag(constructIteDag(root, l)) { constructSwitches(); }
     PTRef conjoin(PTRef root) { return logic.mkAnd(root, logic.mkAnd(switches)); };
 
     static void printDagToFile(const std::string &fname, const ite::Dag&);
