@@ -41,7 +41,9 @@ const struct PTRef PTRef_Undef = {INT32_MAX};
 
 struct PTRefHash {
     uint32_t operator () (const PTRef& s) const {
-        return (uint32_t)s.x; }
+        std::hash<uint32_t> hasher;
+        return hasher((uint32_t)s.x);
+    }
 };
 
 struct PTRefPairHash {
