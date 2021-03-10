@@ -110,6 +110,17 @@ jobs:
                     cat ./ci/run_travis_commands.sh |scl enable devtoolset-7 bash
                 environment:
                     CMAKE_BUILD_TYPE: Release
+    build-macos:
+        macos:
+            xcode: 12.4
+        steps:
+            - checkout
+            - run:
+                name: Release build OS X
+                command: ./ci/run_travis_commands.sh
+                environment:
+                    CMAKE_BUILD_TYPE: Release
+
 
 workflows:
     build-test:
