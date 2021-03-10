@@ -127,3 +127,4 @@ workflows:
         jobs:
             - build-starexec
             - build-recent
+            - build-macos
