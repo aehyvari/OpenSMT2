@@ -31,14 +31,14 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 class THandler; // Forward declaration
 struct SMTConfig; // Forward declaration
-// 
-// Interface that a SATSolver should implement 
+//
+// Interface that a SATSolver should implement
 //
 class SMTSolver
 {
 public:
 
-//  SMTSolver ( Egraph & e, SMTConfig & c ) 
+//  SMTSolver ( Egraph & e, SMTConfig & c )
   SMTSolver (SMTConfig& c, THandler& t) : config(c), theory_handler(t), stop(false) { }
 
   virtual ~SMTSolver ( ) { }
@@ -60,6 +60,7 @@ protected:
 
   virtual void   addVar        (Var v)                      = 0;
   virtual Var    newVar        ( bool = true, bool = true ) = 0;
+
 
   SMTConfig & config;         // Stores Config
   THandler  & theory_handler; // Handles theory
