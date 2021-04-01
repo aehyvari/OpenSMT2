@@ -28,6 +28,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "smt2tokens.h"
 #include "MainSolver.h"
 #include "ArithLogic.h"
+#include "MainSplitter.h"
 #include "LogicFactory.h"
 
 #include <string>
@@ -754,7 +755,7 @@ void Interpret::writeState(const char* filename)
 void Interpret::writeSplits_smtlib2(const char* filename)
 {
     char* msg;
-    main_solver->writeSolverSplits_smtlib2(filename, &msg);
+    std::unique_ptr<MainSplitter>(static_cast<MainSplitter*>(main_solver.release()))->writeSolverSplits_smtlib2(filename, &msg);
 }
 
 bool Interpret::declareFun(ASTNode const & n) // (const char* fname, const vec<SRef>& args)
