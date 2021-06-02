@@ -74,9 +74,7 @@ public:
     // DEPRECATED
     ValPair getValue          (PTRef tr) const ;//{ return getSolverHandler().getValue(tr); };
 
-    void fillTheoryVars       (ModelBuilder & modelBuilder) const;
-    void addSubstitutions     (ModelBuilder & modelBuilder) const;
-
+    void fillTheoryFunctions  (ModelBuilder & modelBuilder) const;
     void printSubstitutions() const;
     PTRef   varToTerm          ( Var v ) const;//{ return tmap.varToPTRef(v); }  // Return the term ref corresponding to a variable
     Pterm&  varToPterm         ( Var v) ;// { return getLogic().getPterm(tmap.varToPTRef(v)); } // Return the term corresponding to a variable
