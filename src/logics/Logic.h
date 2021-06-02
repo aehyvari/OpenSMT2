@@ -360,10 +360,10 @@ class Logic {
     // Top-level equalities based substitutions
     void getNewFacts(PTRef root, MapWithKeys<PTRef, lbool, PTRefHash> & facts);
     virtual lbool retrieveSubstitutions(const vec<PtAsgn>& units, MapWithKeys<PTRef,PtAsgn,PTRefHash>& substs);
-    void substitutionsTransitiveClosure(MapWithKeys<PTRef, PtAsgn, PTRefHash> & substs);
 
-
-
+public:
+    template <typename TAsgn>
+    void substitutionsTransitiveClosure(MapWithKeys<PTRef, TAsgn, PTRefHash> & substs);
 
     bool contains(PTRef x, PTRef y);  // term x contains an occurrence of y
 
@@ -396,6 +396,8 @@ class Logic {
 
     inline int     verbose                       ( ) const;// { return config.verbosity(); }
 };
+
+
 
 #endif // LOGIC_H
 

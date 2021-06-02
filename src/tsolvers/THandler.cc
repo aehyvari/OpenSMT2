@@ -521,12 +521,20 @@ void THandler::declareAtom(PTRef tr) {
 }
 
 PTRef THandler::getSubstitution(PTRef tr) const {
-    auto const & subst = getSolverHandler().substs;
-    if (subst.has(tr)){
-        PtAsgn subs = subst[tr];
-        return subs.sgn == l_True ? subs.tr : PTRef_Undef;
+    auto const & substs = getSolverHandler().substs;
+    PTRef target;
+    if (substs.peek(tr, target)) {
+        assert(not substs.has(target)); // Must be closed
+        return target;
     }
     return PTRef_Undef;
+}
+
+void THandler::printSubstitutions() const {
+    auto const & substs = getSolverHandler().substs;
+    for (auto key: substs.getKeys()) {
+        std::cout << getLogic().pp(key) << " => " << getLogic().pp(substs[key]) << std::endl;
+    }
 }
 
 inline double THandler::drand(double& seed)
