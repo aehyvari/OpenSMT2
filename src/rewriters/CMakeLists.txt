@@ -5,4 +5,5 @@ target_sources(rewriters
 )
 
 install(FILES Rewriter.h Substitutor.h ArithmeticEqualityRewriter.h
-    DESTINATION ${INSTALL_HEADERS_DIR})
+    DESTINATION ${INSTALL_HEADERS_DIR}
+)
