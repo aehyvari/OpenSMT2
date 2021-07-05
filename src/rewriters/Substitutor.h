@@ -11,32 +11,37 @@
 
 class SubstitutionConfig : public DefaultRewriterConfig {
 public:
-    using SubMap = MapWithKeys<PTRef, PtAsgn, PTRefHash>;
+    using SubMap = Logic::SubstMap;
+private:
+    SubMap const & subMap;
 
-    SubstitutionConfig(Logic & logic, SubMap const & subMap): logic(logic), subMap(subMap) {}
+public:
 
+    SubstitutionConfig(Logic &, SubMap const & subMap): subMap(subMap) {}
     PTRef rewrite(PTRef term) override {
         PTRef result = term;
-        if (logic.isVar(term) || logic.isConstant(term)) {
-            if (subMap.has(term) && subMap[term].sgn == l_True)
-                result = subMap[term].tr;
-            else
-                result = term;
-            assert(not logic.isConstant(term) || result == term);
-            assert(result != PTRef_Undef);
-        } else {
-            // The "inductive" case
-            if (subMap.has(term) && subMap[term].sgn == l_True) {
-                result = subMap[term].tr;
-            } else { // Nothing to do here
-            }
+        if (subMap.has(term)) {
+            result = subMap[term];
         }
         return result;
     }
+};
+
+class IteSubstitutionConfig : public IteRewriterConfig {
 private:
-    Logic & logic;
+    using SubMap = Logic::SubstMap;
     SubMap const & subMap;
 
+public:
+
+    IteSubstitutionConfig(Logic &, SubMap const & subMap): subMap(subMap) {}
+    PTRef rewrite(PTRef term) override {
+        PTRef result = term;
+        if (subMap.has(term)) {
+            result = subMap[term];
+        }
+        return result;
+    }
 };
 
 class Substitutor : public Rewriter<SubstitutionConfig> {
@@ -45,5 +50,14 @@ class Substitutor : public Rewriter<SubstitutionConfig> {
 public:
     Substitutor(Logic &logic, SubstitutionConfig::SubMap const &substs) :
             Rewriter<SubstitutionConfig>(logic, config),
+            config(logic, substs) {}
+};
+
+class IteSubstitutor : public Rewriter<IteSubstitutionConfig> {
+    IteSubstitutionConfig config;
+
+public:
+    IteSubstitutor(Logic &logic, MapWithKeys<PTRef, PTRef, PTRefHash> const &substs) :
+            Rewriter<IteSubstitutionConfig>(logic, config),
             config(logic, substs) {}
 };
