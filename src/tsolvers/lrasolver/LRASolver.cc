@@ -101,11 +101,11 @@ lbool LRASolver::getPolaritySuggestion(PTRef ptref) const {
 // Compute interpolants for the conflict
 //
 PTRef
-LRASolver::getInterpolant( const ipartitions_t & mask , std::map<PTRef, icolor_t> *labels, PartitionManager &pmanager) {
+LRASolver::getInterpolant( const ipartitions_t & mask , std::unordered_map<PTRef, icolor_t, PTRefHash> *labels, PartitionManager &pmanager) {
     assert(status == UNSAT);
     vec<PtAsgn> explCopy;
     explanation.copyTo(explCopy);
-    FarkasInterpolator interpolator(logic, std::move(explCopy), explanationCoefficients, labels ? *labels : std::map<PTRef, icolor_t>{},
+    FarkasInterpolator interpolator(logic, std::move(explCopy), explanationCoefficients, labels ? *labels : std::unordered_map<PTRef, icolor_t, PTRefHash>{},
                                     std::unique_ptr<TermColorInfo>(new GlobalTermColorInfo(pmanager, mask)));
     auto itpAlgorithm = config.getLRAInterpolationAlgorithm();
     if (itpAlgorithm == itp_lra_alg_strong) { return interpolator.getFarkasInterpolant(); }

@@ -33,11 +33,10 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 void CGraph::addCNode(PTRef e) {
     assert (e != PTRef_Undef);
-    auto it = cnodes_store.find(e);
-    if (it != cnodes_store.end()) { return; }
+    if (cnodes_store.has(e)) { return; }
 
     CNode * n = new CNode(e);
-    cnodes_store[e] = n;
+    cnodes_store.insert(e, n);
     cnodes.push_back(n);
 }
 
@@ -348,7 +347,7 @@ bool UFInterpolator::colorEdgesFrom(CNode * x) {
 // formula into A and B.
 //
 PTRef
-UFInterpolator::getInterpolant(const ipartitions_t &, std::map<PTRef, icolor_t> * labels, PartitionManager &) {
+UFInterpolator::getInterpolant(const ipartitions_t &, std::unordered_map<PTRef, icolor_t, PTRefHash> * labels, PartitionManager &) {
     assert(labels);
     if (labels) {
         colorInfo.reset(new LocalTermColorInfo(*labels, logic));

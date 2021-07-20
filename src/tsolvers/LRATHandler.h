@@ -43,7 +43,7 @@ class LRATHandler : public TSolverHandler
     virtual const Logic& getLogic() const override;
     virtual lbool getPolaritySuggestion(PTRef) const override;
 
-    virtual PTRef getInterpolant(const ipartitions_t& mask, map<PTRef, icolor_t> *labels, PartitionManager &pmanager) override;
+    virtual PTRef getInterpolant(const ipartitions_t& mask, std::unordered_map<PTRef, icolor_t, PTRefHash> *labels, PartitionManager &pmanager) override;
 };
 
 #endif

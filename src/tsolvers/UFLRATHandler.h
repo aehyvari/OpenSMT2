@@ -43,7 +43,7 @@ class UFLRATHandler : public LRATHandler
     virtual ~UFLRATHandler();
     virtual Logic& getLogic();
 
-    virtual PTRef getInterpolant(const ipartitions_t& mask, map<PTRef, icolor_t> *labels, PartitionManager &pmanager);
+    virtual PTRef getInterpolant(const ipartitions_t& mask, std::unordered_map<PTRef, icolor_t, PTRefHash> *labels, PartitionManager &pmanager);
 };
 
 #endif

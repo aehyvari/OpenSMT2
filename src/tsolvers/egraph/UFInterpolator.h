@@ -45,6 +45,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <PartitionManager.h>
 
 #include <unordered_map>
+#include <unordered_set>
 
 struct CEdge;
 class Logic;
@@ -58,8 +59,9 @@ struct CNode {
     PTRef e;
     icolor_t color;
     CEdge * next;
-    std::set<CEdge *> prev;
+    std::unordered_set<CEdge *> prev;
 };
+
 
 typedef std::pair<CNode *, CNode *> path_t;
 
@@ -76,10 +78,19 @@ struct CEdge {
     icolor_t color;
 };
 
+template<>
+struct std::hash<CEdge> {
+    size_t operator () (const CEdge* e) const {
+        std::hash<uint32_t> h;
+        return h(e->reason.x) ^ h(e->source->e.x) ^ h(e->target->e.x);
+    }
+};
+
 class CGraph {
+    using cnodeStore = Map<PTRef, CNode *, PTRefHash>;
     std::vector<CNode *>          cnodes;
     std::vector<CEdge *>          cedges;
-    std::map<PTRef, CNode *>      cnodes_store;
+    cnodeStore cnodes_store;
 
     PTRef conf1 = PTRef_Undef;
     PTRef conf2 = PTRef_Undef;
@@ -89,17 +100,16 @@ class CGraph {
 public:
     std::vector<CNode *> const & getNodes() { return cnodes; }
     std::vector<CEdge *> const & getEdges() { return cedges; }
-    bool hasNode(PTRef term) const { return cnodes_store.find(term) != cnodes_store.end(); }
-    CNode * getNode(PTRef term) const { return cnodes_store.at(term); }
+    bool hasNode(PTRef term) const { return cnodes_store.has(term); }
+    CNode * getNode(PTRef term) const { return cnodes_store[term]; }
 
     void  addCNode (PTRef e);
     void  addCEdge (PTRef, PTRef, PTRef);
 
     void removeCEdge(CEdge *);
 
-    CNode* getConflictStart() const { assert(conf1 != PTRef_Undef); return cnodes_store.at(conf1); }
-    CNode* getConflictEnd()   const { assert(conf1 != PTRef_Undef); return cnodes_store.at(conf2); }
-
+    CNode* getConflictStart() const { assert(conf1 != PTRef_Undef); return cnodes_store[conf1]; }
+    CNode* getConflictEnd()   const { assert(conf1 != PTRef_Undef); return cnodes_store[conf2]; }
     inline void setConf( PTRef c1, PTRef c2) {
 //      cout << "SetConf: " << logic.printTerm(c1) << " = " << logic.printTerm(c2) << endl;
         assert( conf1 == PTRef_Undef );
@@ -121,7 +131,7 @@ public:
 
     inline int verbose() const { return config.verbosity(); }
 
-    PTRef getInterpolant(const ipartitions_t &, std::map<PTRef, icolor_t> *, PartitionManager &);
+    PTRef getInterpolant(const ipartitions_t &, std::unordered_map<PTRef, icolor_t, PTRefHash> *, PartitionManager &);
 
     void printAsDotty(ostream &);
 
@@ -179,9 +189,9 @@ private:
     SMTConfig & config;
     Logic & logic;
     CGraph & cgraph;
-    std::map<PTRef, icolor_t> litColors; // MB: this is needed because edges need to be colored exactly as the literals in the conflict
-    std::set<CNode *> colored_nodes;
-    std::set<CEdge *> colored_edges;
+    std::unordered_map<PTRef, icolor_t, PTRefHash> litColors; // MB: this is needed because edges need to be colored exactly as the literals in the conflict
+    std::unordered_set<CNode *> colored_nodes;
+    std::unordered_set<CEdge *> colored_edges;
     std::unique_ptr<TermColorInfo> colorInfo;
     std::map<path_t, icolor_t> L;
 

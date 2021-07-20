@@ -66,7 +66,7 @@ public:
 
     virtual       Logic& getLogic() = 0;
     virtual const Logic& getLogic() const = 0;
-    virtual PTRef getInterpolant(const ipartitions_t& mask, map<PTRef, icolor_t>*, PartitionManager& pmanager) = 0;
+    virtual PTRef getInterpolant(const ipartitions_t& mask, std::unordered_map<PTRef, icolor_t, PTRefHash>*, PartitionManager& pmanager) = 0;
 
     void    setSubstitutions(MapWithKeys<PTRef,PtAsgn,PTRefHash>&& substs_) { substs = std::move(substs_); }
     MapWithKeys<PTRef,PtAsgn,PTRefHash> const & getSubstitutions() const { return substs; }

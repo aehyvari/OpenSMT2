@@ -197,7 +197,7 @@ void THandler::getConflict (
 
 
 PTRef
-THandler::getInterpolant(const ipartitions_t& mask, map<PTRef, icolor_t> *labels, PartitionManager &pmanager)
+THandler::getInterpolant(const ipartitions_t& mask, std::unordered_map<PTRef, icolor_t, PTRefHash> *labels, PartitionManager &pmanager)
 {
     return getSolverHandler().getInterpolant(mask, labels, pmanager);
 }

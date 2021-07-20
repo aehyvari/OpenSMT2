@@ -535,7 +535,7 @@ void ProofGraph::produceSingleInterpolant ( vec<PTRef> &interpolants, const ipar
                     res = (tres != TRes::UNSAT);
                 }
                 assert(!res);
-                std::map<PTRef, icolor_t> ptref2label;
+                std::unordered_map<PTRef, icolor_t, PTRefHash> ptref2label;
                 std::vector<Lit>& cl = n->getClause();
 
                 for (std::size_t j = 0; j < cl.size(); ++j) {

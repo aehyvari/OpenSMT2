@@ -42,7 +42,7 @@ struct DecomposedStatistics {
 class FarkasInterpolator {
 public:
     FarkasInterpolator(LALogic & logic, vec<PtAsgn> explanations, std::vector<opensmt::Real> coeffs,
-                       std::map<PTRef, icolor_t> labels)
+                       std::unordered_map<PTRef, icolor_t, PTRefHash> labels)
         : logic(logic),
           explanations(std::move(explanations)),
           explanation_coeffs(std::move(coeffs)),
@@ -50,7 +50,7 @@ public:
     {}
 
     FarkasInterpolator(LALogic & logic, vec<PtAsgn> explanations, std::vector<opensmt::Real> coeffs,
-                       std::map<PTRef, icolor_t> labels, std::unique_ptr<TermColorInfo> colorInfo)
+                       std::unordered_map<PTRef, icolor_t, PTRefHash> labels, std::unique_ptr<TermColorInfo> colorInfo)
         : logic(logic),
           explanations(std::move(explanations)),
           explanation_coeffs(std::move(coeffs)),
@@ -107,7 +107,7 @@ private:
     LALogic & logic;
     const vec<PtAsgn> explanations;
     const std::vector<opensmt::Real> explanation_coeffs;
-    const std::map<PTRef, icolor_t> labels;
+    const std::unordered_map<PTRef, icolor_t, PTRefHash> labels;
     std::unique_ptr<TermColorInfo> termColorInfo;
 };
 

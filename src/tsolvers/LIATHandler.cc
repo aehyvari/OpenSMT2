@@ -25,7 +25,7 @@ const Logic &LIATHandler::getLogic() const
     return logic;
 }
 
-PTRef LIATHandler::getInterpolant(ipartitions_t const &, map<PTRef, icolor_t> * labels, PartitionManager &)
+PTRef LIATHandler::getInterpolant(ipartitions_t const &, std::unordered_map<PTRef, icolor_t, PTRefHash> * labels, PartitionManager &)
 {
     if (labels == nullptr) {
         throw OsmtInternalException("LIA interpolation requires partitioning map, but no map was provided");

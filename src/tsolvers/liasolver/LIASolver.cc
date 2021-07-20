@@ -131,7 +131,7 @@ void LIASolver::markVarAsInt(LVRef v) {
     }
 }
 
-PTRef LIASolver::getInterpolant(std::map<PTRef, icolor_t> const& labels) {
+PTRef LIASolver::getInterpolant(std::unordered_map<PTRef, icolor_t, PTRefHash> const& labels) {
     assert(status == UNSAT);
     LIAInterpolator interpolator(logic, LAExplanations::getLIAExplanation(logic, explanation, explanationCoefficients, labels));
     auto algorithm = config.getLRAInterpolationAlgorithm();

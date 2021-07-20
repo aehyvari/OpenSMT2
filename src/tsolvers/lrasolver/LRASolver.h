@@ -58,7 +58,7 @@ public:
     lbool getPolaritySuggestion(PTRef) const;
 
 public:
-    PTRef getInterpolant(const ipartitions_t &, map<PTRef, icolor_t>*, PartitionManager & pmanager);
+    PTRef getInterpolant(const ipartitions_t &, std::unordered_map<PTRef, icolor_t, PTRefHash>*, PartitionManager & pmanager);
 
 private:
     opensmt::Real getReal(PTRef);

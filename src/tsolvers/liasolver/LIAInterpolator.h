@@ -10,11 +10,11 @@
 struct LAExplanations {
     vec<PtAsgn> explanations;
     std::vector<opensmt::Real> coeffs;
-    std::map<PTRef, icolor_t> labels;
+    std::unordered_map<PTRef, icolor_t, PTRefHash> labels;
 
     static LAExplanations getLIAExplanation(LALogic & logic, vec<PtAsgn> const & explanations,
                                              std::vector<opensmt::Real> const & coeffs,
-                                             std::map<PTRef, icolor_t> const & labels);
+                                             std::unordered_map<PTRef, icolor_t, PTRefHash> const & labels);
 };
 
 class LIAInterpolator {

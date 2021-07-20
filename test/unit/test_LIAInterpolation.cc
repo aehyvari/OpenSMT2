@@ -40,7 +40,7 @@ TEST_F(LIAInterpolationTest, test_InterpolationLRASat){
     PTRef leq2 = logic.mkNumLt(x, one);
     vec<PtAsgn> conflict {PtAsgn(logic.mkNot(leq1), l_False), PtAsgn(logic.mkNot(leq2), l_False)};
     ASSERT_TRUE(std::all_of(conflict.begin(), conflict.end(), [this](PtAsgn p) { return not logic.isNot(p.tr); }));
-    std::map<PTRef, icolor_t> labels {{conflict[0].tr, I_A}, {conflict[1].tr, I_B}};
+    std::unordered_map<PTRef, icolor_t, PTRefHash> labels {{conflict[0].tr, I_A}, {conflict[1].tr, I_B}};
     LIAInterpolator interpolator(logic, LAExplanations::getLIAExplanation(logic, conflict, {1,1}, labels));
     PTRef farkasItp = interpolator.getFarkasInterpolant();
     std::cout << logic.printTerm(farkasItp) << std::endl;
@@ -76,7 +76,7 @@ TEST_F(LIAInterpolationTest, test_DecompositionInLIA){
                           PtAsgn(logic.mkNot(leq3), l_False),
                           PtAsgn(logic.mkNot(leq4), l_False), PtAsgn(leq5, l_True), PtAsgn(leq6, l_True)};
     ASSERT_TRUE(std::all_of(conflict.begin(), conflict.end(), [this](PtAsgn p) { return not logic.isNot(p.tr); }));
-    std::map<PTRef, icolor_t> labels {{conflict[0].tr, I_A}, {conflict[1].tr, I_A}, {conflict[2].tr, I_A},
+    std::unordered_map<PTRef, icolor_t, PTRefHash> labels {{conflict[0].tr, I_A}, {conflict[1].tr, I_A}, {conflict[2].tr, I_A},
                                       {conflict[3].tr, I_B}, {conflict[4].tr, I_B}, {conflict[5].tr, I_B}};
     LIAInterpolator interpolator(logic, LAExplanations::getLIAExplanation(logic, std::move(conflict), {2,1,1,1,1,2}, labels));
     PTRef decomposedFarkasItp = interpolator.getDecomposedInterpolant();

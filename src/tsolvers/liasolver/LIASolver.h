@@ -61,7 +61,7 @@ public:
     TRes check(bool complete) override;
     void getNewSplits(vec<PTRef>& splits) override;
 
-    PTRef getInterpolant(std::map<PTRef, icolor_t> const&);
+    PTRef getInterpolant(std::unordered_map<PTRef, icolor_t, PTRefHash> const&);
 
 protected:
 
