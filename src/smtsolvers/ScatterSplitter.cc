@@ -4,16 +4,26 @@
 
 #include "ScatterSplitter.h"
 #include "Proof.h"
+#include<vector> // for vector
+#include<algorithm> // for copy() and assign()
+#include<iterator> // for back_inserter
+#include<iostream>
+#include "thread"
 
 namespace opensmt
 {
     extern bool stop;
 }
 
-ScatterSplitter::ScatterSplitter(SMTConfig & c, THandler & t)
-    : SimpSMTSolver         (c, t)
-    , splitConfig           (config)
-{}
+ScatterSplitter::ScatterSplitter(SMTConfig & c, THandler & t, Channel& ch)
+        : SimpSMTSolver         (c, t)
+        , splitConfig           (config)
+        , channel (ch)
+        , trail_sent (0)
+        , firstTime (   true)
+        , clauseLearnTimeOut(false)
+{
+}
 
 bool ScatterSplitter::branchLitRandom() {
     return ((!splitConfig.split_on && drand(random_seed) < random_var_freq) || (splitConfig.split_on && splitConfig.split_preference == sppref_rand)) && !order_heap.empty();
@@ -54,30 +64,51 @@ Var ScatterSplitter::doActivityDecision() {
 
     return next;
 }
-
 bool ScatterSplitter::okContinue() const {
-    if (!CoreSMTSolver::okContinue()) {
+    if (channel.shouldStop()) {
         return false;
     }
     if (splitConfig.resource_limit >= 0 && conflicts % 1000 == 0) {
         if ((splitConfig.resource_units == spm_time && time(nullptr) >= splitConfig.next_resource_limit) ||
             (splitConfig.resource_units == spm_decisions && decisions >= splitConfig.next_resource_limit)) {
-            opensmt::stop = true;
+            channel.shouldStop();
             return false;
         }
     }
     return true;
 }
 
+
 void ScatterSplitter::runPeriodics()
 {
-    if (conflicts % 1000 == 0)
-        clausesPublish();
-
-    if (decisionLevel() == 0) {
-        if (conflicts > conflicts_last_update + 1000) {
-            clausesUpdate();
-            conflicts_last_update = conflicts;
+    if (firstTime or clauseLearnTimeOut)
+    {
+        if (firstTime)
+        {
+            std::thread _t([&] {
+                while (true) {
+                    std::unique_lock<std::mutex> lk(channel.getMutex());
+                    if (channel.waitFor(lk, std::chrono::milliseconds(channel.getClauseLearnInterval())))
+                        break;
+//                    std::this_thread::sleep_for(std::chrono::milliseconds(channel.getClauseLearnInterval()/2));
+                    clauseLearnTimeOut = true;
+                    std::cout << "timout: \t"<< channel.getClauseLearnInterval()<<std::endl;
+                }
+            });
+            _t.detach();
+        }
+        firstTime = false;
+        clauseLearnTimeOut = false;
+        std::vector<std::pair<string ,int>>  _toPublishTerms;
+        if (learnSomeClauses(_toPublishTerms))
+        {
+            std::scoped_lock<std::mutex> lk(channel.getMutex());
+//            if (channel.empty()) {
+            channel.assign(_toPublishTerms);
+            std::cout << "\033[1;32m [t solve] add clauses to channel buffer -> size:\033[0m"<< _toPublishTerms.size()<< std::endl;
+//            }
+//                else {
+//                    std::cout << "[t solve] buffer nonempty -> add toPublishTerms: "<<temp.size() << std::endl;
         }
     }
 }
@@ -141,11 +172,19 @@ lbool ScatterSplitter::search(int nof_conflicts, int nof_learnts)
 #ifdef PEDANTIC_DEBUG
     bool thr_backtrack = false;
 #endif
-    while (splitConfig.split_type == spt_none || static_cast<int>(splits.size()) < splitConfig.split_num - 1)
+    while (static_cast<int>(splits.size()) < splitConfig.split_num - 1)
     {
+        if (not splitConfig.split_on and config.sat_solver_limit() and config.sat_solver_limit() == conflicts)
+        {
+            channel.setShouldStop();
+            setSplitConfig_split_on();
+            return l_Undef;
+        }
         if (!okContinue())
             return l_Undef;
-        runPeriodics();
+
+        if (channel.shallClauseShareMode())
+            runPeriodics();
 
 
         CRef confl = propagate();
@@ -283,11 +322,11 @@ lbool ScatterSplitter::search(int nof_conflicts, int nof_learnts)
             {
                 // Assumptions done and the solver is in consistent state
                 updateSplitState();
-                if (!splitConfig.split_start && splitConfig.split_on && scatterLevel())
+                if (!splitConfig.split_start && splitConfig.split_on and scatterLevel())
                 {
                     if (!createSplit_scatter(false))   // Rest is unsat
                     {
-                        opensmt::stop = true;
+                        channel.setShouldStop();
                         return l_Undef;
                     }
                     else continue;
@@ -348,7 +387,7 @@ lbool ScatterSplitter::search(int nof_conflicts, int nof_learnts)
     }
     cancelUntil(0);
     createSplit_scatter(true);
-    opensmt::stop = true;
+    channel.setShouldStop();
     return l_Undef;
 }
 
@@ -358,18 +397,20 @@ lbool ScatterSplitter::solve_()
 
     for (Lit l : this->assumptions) {
         this->addVar_(var(l));
+        //bookkeeping of variables that have appeared in assumptions for filtering clauses before publishing
+        assumptionVars.insert( var(l) );
     }
-    this->clausesUpdate();
 
     // Inform theories of the variables that are actually seen by the
     // SAT solver.
     declareVarsToTheories();
 
     splitConfig.split_type     = config.sat_split_type();
-    if (splitConfig.split_type != spt_none)
+    if (splitConfig.split_type != spt_none and splitConfig.split_on)
     {
+        std::cout<<"sat_solver_limit: "<<config.sat_solver_limit()<<endl;
+        channel.clearShouldStop();
         splitConfig.split_start    = config.sat_split_asap();
-        splitConfig.split_on       = false;
         splitConfig.split_num      = config.sat_split_num();
         splitConfig.split_inittune = config.sat_split_inittune();
         splitConfig.split_midtune  = config.sat_split_midtune();
@@ -433,7 +474,7 @@ lbool ScatterSplitter::solve_()
 
     if (config.dryrun())
         stop = true;
-    while (status == l_Undef && !opensmt::stop && !this->stop)
+    while (status == l_Undef && !channel.shouldStop() && !this->stop)
     {
         // Print some information. At every restart for
         // standard mode or any 2^n intervarls for luby
@@ -478,7 +519,7 @@ lbool ScatterSplitter::solve_()
     }
     else
     {
-        assert( opensmt::stop || status == l_False || this->stop);
+        assert( channel.shouldStop() || status == l_False || this->stop);
     }
 
     // We terminate
@@ -487,7 +528,7 @@ lbool ScatterSplitter::solve_()
 
 lbool ScatterSplitter::zeroLevelConflictHandler() {
     if (splits.size() > 0) {
-        opensmt::stop = true;
+        channel.setShouldStop();
         return l_Undef;
     } else {
         return CoreSMTSolver::zeroLevelConflictHandler();
@@ -511,7 +552,7 @@ bool ScatterSplitter::scatterLevel()
             break;
         }
     }
-    return d == decisionLevel()+assumptions.size();
+    return d == decisionLevel() - assumptions.size();
 }
 
 
@@ -521,13 +562,16 @@ bool ScatterSplitter::createSplit_scatter(bool last)
     splits.emplace_back(SplitData(config.smt_split_format_length() == spformat_brief));
     split_assumptions.emplace_back();
     SplitData& sp = splits.back();
+//    if(decisionLevel()>0)
+//        printf("\n; createSplit_scatter -> Outputing an instance:\n; ");
     vec<Lit> constraints_negated;
     vec<Lit>& split_assumption = split_assumptions.back();
     // Add the literals on the decision levels
-    for (int i = 0; i < decisionLevel(); i++) {
+    for (int i = assumptions.size(); i < decisionLevel(); i++) {
         vec<Lit> tmp;
         Lit l = trail[trail_lim[i]];
         tmp.push(l);
+//        printf("%s%d ", sign(l) ? "-" : "", var(l));
         // Add the literal
         sp.addConstraint(tmp);
         // Remember this literal in the split assumptions vector of the
@@ -547,6 +591,7 @@ bool ScatterSplitter::createSplit_scatter(bool last)
 
     // XXX Skipped learned clauses
     cancelUntil(0);
+//    if (constraints_negated.size() > 0)
     if (!excludeAssumptions(constraints_negated))
         return false;
     simplify();
@@ -554,6 +599,7 @@ bool ScatterSplitter::createSplit_scatter(bool last)
     splitConfig.split_start = true;
     splitConfig.split_on    = true;
     splitConfig.split_next = (splitConfig.split_units == spm_time ? cpuTime() + splitConfig.split_midtune : decisions + splitConfig.split_midtune);
+//    std::cout<<endl;
     return true;
 }
 
@@ -591,3 +637,54 @@ void ScatterSplitter::updateSplitState()
         }
     }
 }
+
+bool ScatterSplitter::learnSomeClauses(std::vector<std::pair<string ,int>> & _toPublishTerms) {
+//    std::vector<std::pair<string ,int>> _toPublishTerms;
+//    std::vector<opensmt::pair<string ,int>> _toPublishTerms;
+    int trail_max = this->trail_lim.size() == 0 ? this->trail.size() : this->trail_lim[0];
+    for (int i = this->trail_sent; i < trail_max; i++) {
+        this->trail_sent++;
+        PTRef pt = this->theory_handler.varToTerm(var(this->trail[i]));
+        pt = sign(this->trail[i]) ? this->theory_handler.getLogic().mkNot(pt) : pt;
+        _toPublishTerms.push_back(std::make_pair(this->theory_handler.getLogic().printString(pt), 0));
+    }
+
+    for (int i = 0; i < this->learnts.size(); i++)
+    {
+        CRef cr = this->learnts[i];
+        Clause &c = this->ca[cr];
+        if (c.size() > 3 || c.mark() == 3)
+            continue;
+        int level = 0;
+        vec<PTRef> clause;
+        bool hasForeignAssumption= false;
+        for (unsigned int j = 0; j < c.size(); j++)
+        {
+            Lit l = c[j];
+            if (findInAssumptionVar( var(l)) )
+            {
+                int result = findInAssumption( var(l) );
+                if (result >=0 ) {
+                    level = std::max<int>(level, result+1);
+                    continue;
+                }
+                else {
+                    hasForeignAssumption= true;
+                    break;
+                }
+            }
+            PTRef pt = theory_handler.varToTerm(var(l));
+            pt = sign(l) ? theory_handler.  getLogic().mkNot(pt) : pt;
+            clause.push(pt);
+        }
+        if (hasForeignAssumption) continue;
+        _toPublishTerms.push_back(std::make_pair(this->theory_handler.getLogic().printString(theory_handler.getLogic().mkOr(clause)), level));
+
+        c.mark(3);
+    }
+    if (not _toPublishTerms.empty()) {
+//        toPublishTerms.insert(std::end(toPublishTerms), std::begin(_toPublishTerms), std::end(_toPublishTerms));
+        return true;
+    }
+    else return false;
+};

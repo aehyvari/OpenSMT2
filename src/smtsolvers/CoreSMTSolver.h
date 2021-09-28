@@ -50,7 +50,6 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 
 #include "SMTSolver.h"
 #include "THandler.h"
-
 #include <cstdio>
 #include <iosfwd>
 #include <memory>
@@ -78,7 +77,7 @@ struct Pair { A first; B second; };
 //=================================================================================================
 // Solver -- the main class:
 
-class CoreSMTSolver
+class CoreSMTSolver : public SMTSolver
 {
     friend class LookaheadScoreClassic;
     friend class LookaheadScoreDeep;
@@ -94,17 +93,17 @@ public:
     //
     CoreSMTSolver(SMTConfig&, THandler&);
     virtual ~CoreSMTSolver();
-    void     initialize       ( );
-    void     clearSearch      ();  // Backtrack SAT solver and theories to decision level 0
+    void     initialize       () override;
+    void     clearSearch      () override;  // Backtrack SAT solver and theories to decision level 0
 
     // Problem specification:
     //
 protected:
     void  addVar_    (Var v); // Ensure that var v exists in the solver
-    virtual Var newVar(bool polarity, bool dvar);//    (bool polarity = true, bool dvar = true); // Add a new variable with parameters specifying variable mode.
+    virtual Var newVar(bool polarity, bool dvar) override;//    (bool polarity = true, bool dvar = true); // Add a new variable with parameters specifying variable mode.
 public:
-    void    addVar(Var v); // Anounce the existence of a variable to the solver
-    bool    addOriginalClause(const vec<Lit> & ps);
+    void    addVar(Var v) override; // Anounce the existence of a variable to the solver
+    bool    addOriginalClause(const vec<Lit> & ps) override;
     bool    addEmptyClause();                                   // Add the empty clause, making the solver contradictory.
     bool    addOriginalClause(Lit p);                                  // Add a unit clause to the solver.
     bool    addOriginalClause(Lit p, Lit q);                           // Add a binary clause to the solver.
@@ -117,7 +116,7 @@ public:
     //
     bool    simplify     ();                        // Removes already satisfied clauses.
     void    declareVarsToTheories();                 // Declare the seen variables to the theories
-    bool    solve        ( const vec< Lit > & assumps );                 // Search for a model that respects a given set of assumptions.
+    lbool   solve        (const vec< Lit > & assumps) override; // Search for a model that respects a given set of assumptions.
     void    crashTest    (int, Var, Var);           // Stress test the theory solver
 
     void    toDimacs     (FILE* f, const vec<Lit>& assumps);            // Write CNF to file in DIMACS-format.
@@ -142,16 +141,16 @@ public:
     lbool   safeValue  (Var x) const;       // The current value of a variable.  l_Undef if the variable does not exist.
     lbool   safeValue  (Lit p) const;       // The current value of a literal.  l_Undef if the literal does not exist.
 
-    lbool   modelValue (Lit p) const;       // The value of a literal in the last model. The last call to solve must have been satisfiable.
+    lbool   modelValue (Lit p) const override; // The value of a literal in the last model. The last call to solve must have been satisfiable.
     int     nAssigns   ()      const;       // The current number of assigned literals.
     int     nClauses   ()      const;       // The current number of original clauses.
     int     nLearnts   ()      const;       // The current number of learnt clauses.
-    int     nVars      ()      const;       // The current number of variables.
+    int     nVars      ()      const override; // The current number of variables.
     int     nFreeVars  ()      const;
 
-    void fillBooleanVars(ModelBuilder & modelBuilder);
+    void fillBooleanVars(ModelBuilder & modelBuilder) override;
 
-    Proof const & getProof() const { assert(proof); return *proof; }
+    Proof const & getProof() const override { assert(proof); return *proof; }
 
     // Resource contraints:
     //
@@ -169,12 +168,12 @@ public:
 
     // External support incremental and backtrackable APIs
     // MB: This is used (and needed) by BitBlaster; can be removed if BitBlaster is re-worked
-    void        pushBacktrackPoint ( );
-    void        popBacktrackPoint  ( );
-    void        reset              ( );
-    inline void restoreOK          ( )       { ok = true; conflict_frame = 0; }
-    inline bool isOK               ( ) const { return ok; } // FALSE means solver is in a conflicting state
-    inline int  getConflictFrame   ( ) const { assert(not isOK()); return conflict_frame; }
+    void        pushBacktrackPoint () override;
+    void        popBacktrackPoint  () override;
+    void        reset              ();
+    inline void restoreOK          () override { ok = true; conflict_frame = 0; }
+    inline bool isOK               () const override { return ok; } // FALSE means solver is in a conflicting state
+    inline int  getConflictFrame   () const override { assert(not isOK()); return conflict_frame; }
 
     template<class C>
     void     printSMTClause   ( ostream &, const C& );
@@ -391,7 +390,6 @@ protected:
     void     analyzeFinal     (Lit p, vec<Lit>& out_conflict);                         // COULD THIS BE IMPLEMENTED BY THE ORDINARIY "analyze" BY SOME REASONABLE GENERALIZATION?
     bool     litRedundant     (Lit p, uint32_t abstract_levels);                       // (helper method for 'analyze()')
     virtual lbool search      (int nof_conflicts, int nof_learnts);                    // Search for a given number of conflicts.
-    virtual bool okContinue   () const;                                                // Check search termination conditions
     void     learntSizeAdjust ();                                                      // Adjust learnts size and print something
     void     reduceDB         ();                                                      // Reduce the set of learnt clauses.
     void     removeSatisfied  (vec<CRef>& cs);                                         // Shrink 'cs' to contain only non-satisfied clauses.
@@ -415,11 +413,11 @@ protected:
     //
     virtual void attachClause     (CRef cr);               // Attach a clause to watcher lists.
     virtual void detachClause     (CRef cr, bool strict = false); // Detach a clause to watcher lists.
-    void     removeClause     (CRef c);             // Detach and free a clause.
+    virtual void removeClause     (CRef c);             // Detach and free a clause.
     bool     locked           (const Clause& c) const; // Returns TRUE if a clause is a reason for some implication in the current state.
     bool     satisfied        (const Clause& c) const; // Returns TRUE if a clause is satisfied in the current state.
 
-    void     relocAll         (ClauseAllocator& to);
+    virtual void relocAll         (ClauseAllocator& to);
 
     // Misc:
     //
@@ -764,11 +762,11 @@ inline bool     CoreSMTSolver::withinBudget() const
 // pure bool do not give a safe interface. Either interrupts must be possible to turn off here, or
 // all calls to solve must return an 'lbool'. I'm not yet sure which I prefer.
 
-inline bool     CoreSMTSolver::solve  (const vec<Lit>& assumps)
+inline lbool    CoreSMTSolver::solve  (const vec<Lit>& assumps)
 {
     budgetOff();
     setAssumptions(assumps);
-    return solve_() == l_True;
+    return solve_();
 }
 
 inline void     CoreSMTSolver::toDimacs(const char* file)

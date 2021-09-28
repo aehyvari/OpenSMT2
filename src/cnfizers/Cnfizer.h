@@ -28,6 +28,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define CNFIZER_H
 
 #include "Global.h"
+#include "SMTSolver.h"
 #include "Theory.h"
 #include "Logic.h"
 #include "PartitionManager.h"
@@ -45,7 +46,7 @@ struct SMTConfig;
 class Cnfizer
 {
 public:
-    SimpSMTSolver&      solver;
+    SMTSolver&          solver;
 protected:
     SMTConfig&          config;
     Logic&              logic;
@@ -71,7 +72,7 @@ public:
            , Logic&        logic_
            , PartitionManager& pmanager_
            , TermMapper&    tmap_
-           , SimpSMTSolver& solver_
+           , SMTSolver& solver_
            );
 
 

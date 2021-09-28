@@ -38,7 +38,7 @@ public:
      * @param config Configuration for the OpenSMT instance
      */
     Opensmt(opensmt_logic _logic, const char* name, std::unique_ptr<SMTConfig> config);
-    ~Opensmt();
+    ~Opensmt() = default;
 
     SMTConfig& getConfig() { return *config; }
     Logic& getLogic() { return *logic; }
@@ -54,7 +54,7 @@ public:
         return dynamic_cast<CUFLogic&>(*logic);
     }
     MainSolver& getMainSolver() { return *mainSolver; }
-    SimpSMTSolver& getSolver() { return getMainSolver().getSMTSolver(); }
+    SMTSolver& getSolver() { return getMainSolver().getSMTSolver(); }
 private:
     std::unique_ptr<SMTConfig> config;
     std::unique_ptr<Logic> logic;

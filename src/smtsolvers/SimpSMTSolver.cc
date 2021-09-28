@@ -117,7 +117,7 @@ Var SimpSMTSolver::newVar(bool sign, bool dvar)
 
 
 
-lbool SimpSMTSolver::solve_(bool do_simp, bool turn_off_simp)
+lbool SimpSMTSolver::solve_()
 {
     vec<Var> extra_frozen;
     lbool    result = l_True;
@@ -133,28 +133,23 @@ skip_theory_preproc:
     // Added Code
     //=================================================================================================
 
-    do_simp &= use_simplification;
-
-    if (do_simp)
+    // Assumptions must be temporarily frozen to run variable elimination:
+    for (int i = 0; i < assumptions.size(); i++)
     {
-        // Assumptions must be temporarily frozen to run variable elimination:
-        for (int i = 0; i < assumptions.size(); i++)
+        Var v = var(assumptions[i]);
+
+        // If an assumption has been eliminated, remember it.
+        assert(!isEliminated(v));
+
+        if (!frozen[v])
         {
-            Var v = var(assumptions[i]);
-
-            // If an assumption has been eliminated, remember it.
-            assert(!isEliminated(v));
-
-            if (!frozen[v])
-            {
-                // Freeze and store.
-                setFrozen(v, true);
-                extra_frozen.push(v);
-            }
+            // Freeze and store.
+            setFrozen(v, true);
+            extra_frozen.push(v);
         }
-
-        result = lbool(eliminate(turn_off_simp));
     }
+
+    result = lbool(eliminate());
 
 #ifdef STATISTICS
     CoreSMTSolver::preproc_time = cpuTime( );
@@ -171,10 +166,9 @@ skip_theory_preproc:
         verifyModel();
     }
 
-    if (do_simp)
-        // Unfreeze the assumptions that were frozen:
-        for (int i = 0; i < extra_frozen.size(); i++)
-            setFrozen(extra_frozen[i], false);
+    // Unfreeze the assumptions that were frozen:
+    for (int i = 0; i < extra_frozen.size(); i++)
+        setFrozen(extra_frozen[i], false);
 
     return result;
 }

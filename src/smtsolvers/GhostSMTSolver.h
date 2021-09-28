@@ -27,7 +27,7 @@ protected:
 public:
     GhostSMTSolver(SMTConfig& c, THandler& h) : SimpSMTSolver(c, h) {}
     void garbageCollect() override;
-    void relocAll();
+    void relocAll(ClauseAllocator & to) override;
 };
 
 #endif //OPENSMT_GHOSTSMTSOLVER_H

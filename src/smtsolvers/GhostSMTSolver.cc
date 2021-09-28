@@ -187,7 +187,8 @@ GhostSMTSolver::pickBranchLit() {
     return l;
 }
 
-void GhostSMTSolver::relocAll() {
+void GhostSMTSolver::relocAll(ClauseAllocator & ca) {
+    SimpSMTSolver::relocAll(ca);
     for (const auto & appearances : thLitToClauses) {
         for (CRef cr : appearances) {
             cr = ca[cr].relocation();
@@ -202,9 +203,7 @@ GhostSMTSolver::garbageCollect()
     cleanUpClauses();
     to.extra_clause_field = ca.extra_clause_field; // NOTE: this is important to keep (or lose) the extra fields.
 
-    SimpSMTSolver::relocAll(to);
-    CoreSMTSolver::relocAll(to);
-    relocAll();
+    relocAll(ca);
 
     to.moveTo(ca);
 }

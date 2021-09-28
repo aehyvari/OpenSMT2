@@ -65,7 +65,8 @@ namespace opensmt
 // Constructor/Destructor:
 
 CoreSMTSolver::CoreSMTSolver(SMTConfig & c, THandler& t )
-    : config           (c)
+    : SMTSolver        (c, t)
+    , config           (c)
     , theory_handler   (t)
     , verbosity        (c.verbosity())
     , init             (false)
@@ -1382,16 +1383,6 @@ void CoreSMTSolver::popBacktrackPoint()
     assert( isOK( ) );
 }
 
-bool CoreSMTSolver::okContinue() const
-{
-    if ( opensmt::stop ) return false;
-
-    if (conflicts % 1000 == 0) {
-        if ( this->stop )
-            return false;
-    }
-    return true;
-}
 
 void CoreSMTSolver::learntSizeAdjust() {
     if (--learntsize_adjust_cnt == 0) {
@@ -1471,8 +1462,6 @@ lbool CoreSMTSolver::search(int nof_conflicts, int nof_learnts)
 #endif
     while (true)
     {
-        if (!okContinue())
-            return l_Undef;
 
         CRef confl = propagate();
         if (confl != CRef_Undef)
@@ -1634,7 +1623,6 @@ lbool CoreSMTSolver::search(int nof_conflicts, int nof_learnts)
         }
     }
     cancelUntil(0);
-    opensmt::stop = true;
     return l_Undef;
 }
 
@@ -1784,7 +1772,7 @@ lbool CoreSMTSolver::solve_()
 
     if (config.dryrun())
         stop = true;
-    while (status == l_Undef && !opensmt::stop && !this->stop)
+    while (status == l_Undef && !this->stop)
     {
         // Print some information. At every restart for
         // standard mode or any 2^n intervarls for luby
@@ -1830,7 +1818,7 @@ lbool CoreSMTSolver::solve_()
     }
     else
     {
-        assert( opensmt::stop || status == l_False || this->stop);
+        assert( status == l_False || this->stop);
     }
 
     // We terminate

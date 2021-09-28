@@ -28,45 +28,53 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define SMTSOLVER_H
 
 #include "SolverTypes.h"
+#include "TypeUtils.h"
+#include "PtStructs.h"
+#include "THandler.h"
+#include "Proof.h"
 
-class THandler; // Forward declaration
+class ModelBuilder;
 struct SMTConfig; // Forward declaration
+
 //
 // Interface that a SATSolver should implement
 //
-class SMTSolver
-{
-public:
-
-//  SMTSolver ( Egraph & e, SMTConfig & c )
-  SMTSolver (SMTConfig& c, THandler& t) : config(c), theory_handler(t), stop(false) { }
-
-  virtual ~SMTSolver ( ) { }
-  //
-  // addClause
-  //
-  // Receive a clause in form of a list of
-  // literals
-  // (atom or negated atom) and feeds a
-  // corresponding clause in the SAT Solver
-  //
-
-  virtual bool   addSMTClause  ( const vec<Lit> &) = 0;
-  virtual bool   smtSolve      ( )                          = 0;
-  virtual void   setFrozen     ( Var, bool )                = 0;
-  virtual bool   okay          () const                     = 0;
+class SMTSolver {
 
 protected:
+    SMTConfig & config;         // Stores Config
+    THandler  & theory_handler; // Handles theory
+    bool stop;
+    vec<lbool>  model;          // Stores model
 
-  virtual void   addVar        (Var v)                      = 0;
-  virtual Var    newVar        ( bool = true, bool = true ) = 0;
-
-
-  SMTConfig & config;         // Stores Config
-  THandler  & theory_handler; // Handles theory
 public:
-  vec<lbool>  model;          // Stores model
-  bool stop;
+
+    SMTSolver (SMTConfig& c, THandler& t) : config(c), theory_handler(t), stop(false) { }
+    virtual ~SMTSolver ( ) { }
+
+    virtual lbool  solve         (const vec<Lit>& assumps) = 0;
+    virtual void   setFrozen     ( Var, bool )                = 0;
+    virtual bool   isOK          () const                     = 0;
+    virtual void   addVar        (Var v)                      = 0;
+    virtual bool   addOriginalSMTClause(const vec<Lit> & smt_clause, opensmt::pair<CRef, CRef> & inOutCRefs) = 0;
+    virtual bool   addOriginalClause(const vec<Lit> & ps) = 0;
+    virtual lbool  modelValue (Lit p) const = 0;
+    virtual void   fillBooleanVars(ModelBuilder & modelBuilder) = 0;
+    virtual void   initialize() = 0;
+    virtual void   pushBacktrackPoint() = 0;
+    virtual void   popBacktrackPoint() = 0;
+    virtual void   restoreOK() = 0;
+    virtual Proof const & getProof() const = 0;
+    virtual int    nVars() const = 0;
+
+    virtual int getConflictFrame() const = 0;
+
+    virtual void clearSearch() = 0;  // Backtrack SAT solver and theories to decision level 0
+
+    void setStop() { stop = true; }
+protected:
+    virtual Var    newVar        ( bool = true, bool = true ) = 0;
 };
+
 
 #endif

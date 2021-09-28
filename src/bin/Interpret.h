@@ -31,7 +31,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "PtStructs.h"
 #include "SymRef.h"
 #include "Logic.h"
-#include "MainSolver.h"
+#include "LogicFactory.h"
+#include "MainSplitter.h"
 
 #include <unordered_map>
 
@@ -104,6 +105,7 @@ class Interpret {
     SMTConfig &     config;
     std::unique_ptr<Logic> logic;
     std::unique_ptr<MainSolver> main_solver;
+    Channel &       channel;
 
     bool            f_exit;
 
@@ -150,14 +152,15 @@ class Interpret {
 
     bool                        addLetFrame(const vec<char *> & names, vec<PTRef> const& args, LetRecords& letRecords);
     PTRef                       letNameResolve(const char* s, const LetRecords& letRecords) const;
-
+    MainSolver&                 createMainSolver(SMTConfig & config, const char* logic_name);
 
   public:
 
-    Interpret(SMTConfig& c)
-        : config     (c)
-        , f_exit     (false)
-        { }
+    Interpret(SMTConfig& c, Channel& ch)
+            : config     (c)
+            , channel    (ch)
+            , f_exit     (false)
+    { }
 
     ~Interpret();
 
@@ -177,6 +180,8 @@ class Interpret {
     vec<PTRef>& getAssertions() { return assertions; }
     bool is_top_level_assertion(PTRef ref);
     int get_assertion_index(PTRef ref);
+    MainSolver&     getMainSolver() { return *main_solver; }
+    Logic&          getLogic()      {return *logic;}
 };
 
 #endif

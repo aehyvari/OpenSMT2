@@ -1,3 +1,20 @@
+message([STATUS] "partition-channel is downloading, please wait..." )
+include(FetchContent)
+FetchContent_Declare(
+        partition-channel
+        GIT_REPOSITORY https://github.com/MasoudAsadzade/partition-channel.git
+        GIT_TAG main
+)
+FetchContent_GetProperties(partition-channel)
+if(NOT partition-channel_POPULATED)
+  FetchContent_Populate(partition-channel)
+  add_subdirectory(${partition-channel_SOURCE_DIR} ${partition-channel_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif()
+FetchContent_MakeAvailable(partition-channel)
+message([STATUS] "partition-channel files have been written to: : ${partition-channel_SOURCE_DIR}")
+include_directories(${partition-channel_SOURCE_DIR})
+include_directories(${partition-channel_SOURCE_DIR}/src)
+
 add_subdirectory(proof)
 add_subdirectory(common)
 add_subdirectory(cnfizers)

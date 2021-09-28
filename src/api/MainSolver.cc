@@ -215,7 +215,7 @@ std::unique_ptr<Model> MainSolver::getModel() {
 
     ModelBuilder modelBuilder {logic};
     ts.solver.fillBooleanVars(modelBuilder);
-    thandler.fillTheoryFunctions(modelBuilder);
+    thandler->fillTheoryFunctions(modelBuilder);
 
     return modelBuilder.build();
 }
@@ -223,7 +223,7 @@ std::unique_ptr<Model> MainSolver::getModel() {
 std::unique_ptr<InterpolationContext> MainSolver::getInterpolationContext() {
     if (status != s_False) { throw OsmtApiException("Interpolation context cannot be created if solver is not in UNSAT state"); }
     return std::make_unique<InterpolationContext>(
-        config, *theory, term_mapper, getSMTSolver().getProof(), pmanager, getSMTSolver().nVars()
+            config, *theory, *term_mapper, getSMTSolver().getProof(), pmanager, getSMTSolver().nVars()
     );
 }
 
@@ -335,13 +335,13 @@ sstat MainSolver::solve()
     status = sstat(ts.solve(en_frames));
 
     if (status == s_True && config.produce_models())
-        thandler.computeModel();
+        thandler->computeModel();
     smt_solver->clearSearch();
     return status;
 }
 
-std::unique_ptr<SimpSMTSolver> MainSolver::createInnerSolver(SMTConfig & config, THandler & thandler) {
-    SimpSMTSolver* solver = nullptr;
+std::unique_ptr<SMTSolver> MainSolver::createInnerSolver(SMTConfig & config, THandler & thandler) {
+    SMTSolver* solver = nullptr;
     if (config.sat_pure_lookahead())
         solver = new LookaheadSMTSolver(config, thandler);
     else if (config.sat_lookahead_split())
@@ -351,7 +351,7 @@ std::unique_ptr<SimpSMTSolver> MainSolver::createInnerSolver(SMTConfig & config,
     else
         solver = new SimpSMTSolver(config, thandler);
 
-    return std::unique_ptr<SimpSMTSolver>(solver);
+    return std::unique_ptr<SMTSolver>(solver);
 }
 
 std::unique_ptr<Theory> MainSolver::createTheory(Logic & logic, SMTConfig & config) {
