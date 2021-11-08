@@ -324,6 +324,23 @@ bool ArithLogic::isNumTerm(PTRef tr) const
         return false;
 }
 
+PTRef ArithLogic::mkAbs(PTRef tr) {
+    if (isNeg(tr)) {
+        tr = getPterm(tr)[0];
+    }
+    if (isConstant(tr)) {
+        return getNumConst(tr) >= 0 ? tr : mkNeg(tr);
+    }
+    if (isTimes(tr)) {
+        vec<PTRef> args;
+        for (auto arg_tr : getPterm(tr)) {
+            args.push(mkAbs(arg_tr));
+        }
+        return mkTimes(args);
+    }
+    return mkFun(yieldsSortInt(tr) ? get_sym_Int_ABS() : get_sym_Real_ABS(), {tr});
+}
+
 PTRef ArithLogic::mkNeg(PTRef tr)
 {
     assert(!isNeg(tr)); // MB: The invariant now is that there is no "Minus" node
@@ -690,6 +707,8 @@ PTRef ArithLogic::insertTerm(SymRef sym, vec<PTRef>&& terms)
             return mkMod(terms[0], terms[1]);
         if (isIntDiv(sym))
             return mkIntDiv(std::move(terms));
+        if (isAbs(sym))
+            return mkAbs(terms[0]);
     }
     return Logic::insertTerm(sym, std::move(terms));
 }

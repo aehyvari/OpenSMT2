@@ -248,6 +248,13 @@ public:
 
     bool isMod(SymRef sr)   const { return sr == sym_Int_MOD; }
 
+    bool isAbs(PTRef tr) const { return isIntAbs(tr) or isRealAbs(tr); }
+    bool isAbs(SymRef sr) const { return isIntAbs(sr) or isRealAbs(sr); }
+    bool isIntAbs(PTRef tr) const { return isIntAbs(getPterm(tr).symb()); }
+    bool isRealAbs(PTRef tr) const { return isRealAbs(getPterm(tr).symb()); }
+    bool isIntAbs(SymRef sr)   const { return sr == sym_Int_ABS; }
+    bool isRealAbs(SymRef sr) const { return sr == sym_Real_ABS; }
+
     bool isNumEq(SymRef sr) const { return isEquality(sr) and isSortNum(sym_store[sr][0]); }
     bool isNumEq(PTRef tr) const { return isNumEq(getPterm(tr).symb()); }
     bool isIntEq(PTRef tr) const { return isIntEq(getPterm(tr).symb()); }
@@ -359,6 +366,9 @@ public:
     // Mod
     PTRef mkMod(vec<PTRef> && args);
     PTRef mkMod(PTRef first, PTRef second) { return mkMod(vec<PTRef>{first, second}); }
+
+    // Abs
+    PTRef mkAbs(PTRef p);
 
     // Leq
     PTRef mkLeq(vec<PTRef> const & args);
