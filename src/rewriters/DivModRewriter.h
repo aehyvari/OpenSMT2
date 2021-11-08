@@ -63,13 +63,17 @@ public:
                 auto upperBound = abs(divisorVal) - 1;
                 // dividend = divVar * divisor + modVar
                 // 0 <= modVar <= |dividend| - 1
-                definitions.push(logic.mkAnd(
-                        logic.mkEq(dividend, logic.mkPlus(logic.mkTimes(divisor, divVar), modVar)),
+                definitions.push(
+                    logic.mkImpl(logic.mkNot(logic.mkEq(divisor, logic.getTerm_IntZero())),
                         logic.mkAnd(
-                                logic.mkLeq(logic.getTerm_IntZero(), modVar),
-                                logic.mkLeq(modVar, logic.mkIntConst(upperBound))
+                            logic.mkEq(dividend, logic.mkPlus(logic.mkTimes(divisor, divVar), modVar)),
+                            logic.mkAnd(
+                                    logic.mkLeq(logic.getTerm_IntZero(), modVar),
+                                    logic.mkLeq(modVar, logic.mkIntConst(upperBound))
+                            )
                         )
-                ));
+                    )
+                );
             }
             return rewritten;
         }

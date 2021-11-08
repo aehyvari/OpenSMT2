@@ -1,0 +1,8 @@
+(set-logic QF_NIA)
+(declare-fun a () Int)
+(declare-fun b () Int)
+(assert (> 0 (mod a b)))
+(check-sat)
+(assert (= 0 a))
+(assert (= 0 b))
+(check-sat)

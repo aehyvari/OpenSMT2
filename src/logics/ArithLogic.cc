@@ -21,11 +21,12 @@ const std::string ArithLogic::tk_int_neg   = "-";
 const std::string ArithLogic::tk_int_minus = "-";
 const std::string ArithLogic::tk_int_plus  = "+";
 const std::string ArithLogic::tk_int_times = "*";
-const std::string ArithLogic::tk_int_ntimes = ".*";
+const std::string ArithLogic::tk_int_ntimes= ".*";
 const std::string ArithLogic::tk_int_div   = "div";
-const std::string ArithLogic::tk_int_ndiv   = ".div";
+const std::string ArithLogic::tk_int_ndiv  = ".div";
 const std::string ArithLogic::tk_int_mod   = "mod";
-const std::string ArithLogic::tk_int_nmod   = ".mod";
+const std::string ArithLogic::tk_int_nmod  = ".mod";
+const std::string ArithLogic::tk_int_abs   = ".abs";
 const std::string ArithLogic::tk_int_lt    = "<";
 const std::string ArithLogic::tk_int_leq   = "<=";
 const std::string ArithLogic::tk_int_gt    = ">";
@@ -39,9 +40,10 @@ const std::string ArithLogic::tk_real_neg   = "-";
 const std::string ArithLogic::tk_real_minus = "-";
 const std::string ArithLogic::tk_real_plus  = "+";
 const std::string ArithLogic::tk_real_times = "*";
-const std::string ArithLogic::tk_real_ntimes = ".*";
+const std::string ArithLogic::tk_real_ntimes= ".*";
 const std::string ArithLogic::tk_real_div   = "/";
-const std::string ArithLogic::tk_real_ndiv   = "./";
+const std::string ArithLogic::tk_real_abs   = "abs";
+const std::string ArithLogic::tk_real_ndiv  = "./";
 const std::string ArithLogic::tk_real_lt    = "<";
 const std::string ArithLogic::tk_real_leq   = "<=";
 const std::string ArithLogic::tk_real_gt    = ">";
@@ -66,6 +68,8 @@ ArithLogic::ArithLogic(opensmt::Logic_t type)
     , sym_Real_TIMES(declareFun_Commutative_NoScoping_LeftAssoc(tk_real_times, sort_REAL, {sort_REAL, sort_REAL}))
     , sym_Real_NTIMES(declareFun_Commutative_NoScoping_LeftAssoc(tk_real_ntimes, sort_REAL, {sort_REAL, sort_REAL}))
     , sym_Real_DIV(declareFun_NoScoping_LeftAssoc(tk_real_div, sort_REAL, {sort_REAL, sort_REAL}))
+    , sym_Real_NDIV(declareFun_NoScoping_LeftAssoc(tk_real_ndiv, sort_REAL, {sort_REAL, sort_REAL}))
+    , sym_Real_ABS(declareFun_NoScoping(tk_real_abs, sort_REAL, {sort_REAL}))
     , sym_Real_EQ(sortToEquality[sort_REAL])
     , sym_Real_LEQ(declareFun_NoScoping_Chainable(tk_real_leq, sort_BOOL, {sort_REAL, sort_REAL}))
     , sym_Real_LT(declareFun_NoScoping_Chainable(tk_real_lt, sort_BOOL, {sort_REAL, sort_REAL}))
@@ -86,7 +90,10 @@ ArithLogic::ArithLogic(opensmt::Logic_t type)
     , sym_Int_TIMES(declareFun_Commutative_NoScoping_LeftAssoc(tk_int_times, sort_INT, {sort_INT, sort_INT}))
     , sym_Int_NTIMES(declareFun_Commutative_NoScoping_LeftAssoc(tk_int_ntimes, sort_INT, {sort_INT, sort_INT}))
     , sym_Int_DIV(declareFun_NoScoping_LeftAssoc(tk_int_div, sort_INT, {sort_INT, sort_INT}))
+    , sym_Int_NDIV(declareFun_NoScoping_LeftAssoc(tk_int_ndiv, sort_INT, {sort_INT, sort_INT}))
     , sym_Int_MOD(declareFun_NoScoping(tk_int_mod, sort_INT, {sort_INT, sort_INT}))
+    , sym_Int_NMOD(declareFun_NoScoping(tk_int_nmod, sort_INT, {sort_INT, sort_INT}))
+    , sym_Int_ABS(declareFun_NoScoping(tk_int_abs, sort_INT, {sort_INT, sort_INT}))
     , sym_Int_EQ(sortToEquality[sort_INT])
     , sym_Int_LEQ(declareFun_NoScoping_Chainable(tk_int_leq, sort_BOOL, {sort_INT, sort_INT}))
     , sym_Int_LT(declareFun_NoScoping_Chainable(tk_int_lt, sort_BOOL, {sort_INT, sort_INT}))
@@ -297,6 +304,23 @@ bool ArithLogic::isNumTerm(PTRef tr) const
         return isNumVar(tr) || isConstant(tr);
     else
         return false;
+}
+
+PTRef ArithLogic::mkAbs(PTRef tr) {
+    if (isNeg(tr)) {
+        tr = getPterm(tr)[0];
+    }
+    if (isConstant(tr)) {
+        return getNumConst(tr) >= 0 ? tr : mkNeg(tr);
+    }
+    if (isTimes(tr)) {
+        vec<PTRef> args;
+        for (auto arg_tr : getPterm(tr)) {
+            args.push(mkAbs(arg_tr));
+        }
+        return mkTimes(args);
+    }
+    return mkFun(yieldsSortInt(tr) ? get_sym_Int_ABS() : get_sym_Real_ABS(), {tr});
 }
 
 PTRef ArithLogic::mkNeg(PTRef tr)
@@ -590,10 +614,15 @@ PTRef ArithLogic::mkMod(vec<PTRef> && args) {
     PTRef dividend = args[0];
     PTRef divisor = args[1];
 
-    if (not isNumConst(divisor)) { throw OsmtApiException("Divisor must be constant in linear logic"); }
-    if (isZero(divisor)) { throw ArithDivisionByZeroException(); }
+    if (not isNumConst(divisor)) {
+        if (hasNonlinears()) {
+            return mkFun(sym_Int_NMOD, {dividend, divisor});
+        } else {
+            throw OsmtApiException("Divisor must be constant in linear logic");
+        }
+    }
 
-    if (isConstant(dividend)) {
+    if (isConstant(dividend) and not isZero(divisor)) {
         auto const& dividendValue = getNumConst(dividend);
         auto const& divisorValue = getNumConst(divisor);
         assert(dividendValue.isInteger() and divisorValue.isInteger());
@@ -612,7 +641,13 @@ PTRef ArithLogic::mkIntDiv(vec<PTRef> && args) {
     assert(args.size() == 2);
     PTRef dividend = args[0];
     PTRef divisor = args[1];
-    if (not isConstant(divisor) and not isConstant(dividend)) { throw LANonLinearException("Divisor or dividend must be constant in linear logic"); }
+    if (not isConstant(divisor) and not isConstant(dividend)) {
+        if (hasNonlinears()) {
+            return mkFun(sym_Int_NDIV, std::move(args));
+        } else {
+            throw LANonLinearException("Divisor or dividend must be constant in linear logic");
+        }
+    }
     if (isZero(divisor)) { throw ArithDivisionByZeroException(); }
 
     if (isConstant(divisor) and isConstant(dividend)) {
@@ -672,10 +707,13 @@ PTRef ArithLogic::insertTerm(SymRef sym, vec<PTRef>&& terms)
         return mkGeq(terms);
     if (isGt(sym))
         return mkGt(terms);
-    if (isMod(sym))
+    if (isMod(sym) or isNMod(sym))
         return mkMod(std::move(terms));
-    if (isIntDiv(sym))
+    if (isIntDiv(sym) or isIntNDiv(sym))
         return mkIntDiv(std::move(terms));
+    if (isAbs(sym))
+        return mkAbs(terms[0]);
+
     return Logic::insertTerm(sym, std::move(terms));
 }
 

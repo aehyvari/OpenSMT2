@@ -8,6 +8,7 @@
 #include "ArithmeticEqualityRewriter.h"
 #include "DistinctRewriter.h"
 #include "DivModRewriter.h"
+#include "AbsRewriter.h"
 
 template<typename LinAlgLogic, typename LinAlgTHandler>
 class LATheory : public Theory
@@ -41,6 +42,11 @@ PTRef rewriteDivMod<ArithLogic>(ArithLogic & logic, PTRef fla) {
     return not logic.hasIntegers() ? fla : DivModRewriter(logic).rewrite(fla);
 }
 
+PTRef rewriteAbs(ArithLogic & logic, PTRef fla) {
+    return AbsRewriter(logic).rewrite(fla);
+}
+
+
 }
 
 //
@@ -59,6 +65,7 @@ bool LATheory<LinAlgLogic,LinAlgTSHandler>::simplify(const vec<PFRef>& formulas,
             PTRef old = fla;
             fla = rewriteDistincts(getLogic(), fla);
             fla = rewriteDivMod<LinAlgLogic>(lalogic, fla);
+            fla = rewriteAbs(lalogic, fla);
             fla = equalityRewriter.rewrite(fla);
             pmanager.transferPartitionMembership(old, fla);
         }
@@ -69,6 +76,7 @@ bool LATheory<LinAlgLogic,LinAlgTSHandler>::simplify(const vec<PFRef>& formulas,
         PTRef finalFla = flaFromSubstitutionResult(subs_res);
         finalFla = rewriteDistincts(getLogic(), finalFla);
         finalFla = rewriteDivMod<LinAlgLogic>(lalogic, finalFla);
+        finalFla = rewriteAbs(lalogic, finalFla);
         currentFrame.root = equalityRewriter.rewrite(finalFla);
     }
     notOkToPartition = equalityRewriter.getAndClearNotOkToPartition();

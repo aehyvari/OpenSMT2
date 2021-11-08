@@ -52,11 +52,13 @@ protected:
     static const std::string tk_int_times;
     static const std::string tk_int_ntimes;
     static const std::string tk_real_div;
+    static const std::string tk_real_abs;
     static const std::string tk_real_ndiv;
     static const std::string tk_int_div;
     static const std::string tk_int_ndiv;
     static const std::string tk_int_mod;
     static const std::string tk_int_nmod;
+    static const std::string tk_int_abs;
     static const std::string tk_real_leq;
     static const std::string tk_int_leq;
     static const std::string tk_real_lt;
@@ -82,6 +84,8 @@ protected:
     SymRef              sym_Real_TIMES;
     SymRef              sym_Real_NTIMES;
     SymRef              sym_Real_DIV;
+    SymRef              sym_Real_NDIV;
+    SymRef              sym_Real_ABS;
     SymRef              sym_Real_EQ;
     SymRef              sym_Real_LEQ;
     SymRef              sym_Real_LT;
@@ -104,7 +108,10 @@ protected:
     SymRef              sym_Int_TIMES;
     SymRef              sym_Int_NTIMES;
     SymRef              sym_Int_DIV;
+    SymRef              sym_Int_NDIV;
     SymRef              sym_Int_MOD;
+    SymRef              sym_Int_NMOD;
+    SymRef              sym_Int_ABS;
     SymRef              sym_Int_EQ;
     SymRef              sym_Int_LEQ;
     SymRef              sym_Int_LT;
@@ -168,7 +175,9 @@ public:
     SymRef get_sym_Real_NTIMES () const { return sym_Real_NTIMES; }
     SymRef get_sym_Int_DIV () const { return sym_Int_DIV; }
     SymRef get_sym_Int_MOD () const { return sym_Int_MOD; }
+    SymRef get_sym_Int_ABS () const { return sym_Int_ABS; }
     SymRef get_sym_Real_DIV () const { return sym_Real_DIV; }
+    SymRef get_sym_Real_ABS () const { return sym_Real_ABS; }
     SymRef get_sym_Int_MINUS () const { return sym_Int_MINUS; }
     SymRef get_sym_Real_MINUS () const { return sym_Real_MINUS; }
     SymRef get_sym_Real_PLUS () const {return sym_Real_PLUS; }
@@ -245,11 +254,26 @@ public:
 
     bool isRealDiv(PTRef tr) const { return isRealDiv(getPterm(tr).symb()); }
     bool isRealDiv(SymRef sr) const { return sr == sym_Real_DIV; }
+    bool isRealNDiv(PTRef tr) const { return isRealNDiv(getPterm(tr).symb()); }
+    bool isRealNDiv(SymRef sr) const { return sr == sym_Real_NDIV; }
 
     bool isIntDiv(PTRef tr) const { return isIntDiv(getPterm(tr).symb()); }
     bool isIntDiv(SymRef sr) const { return sr == sym_Int_DIV; }
 
+    bool isIntNDiv(PTRef tr) const { return isIntNDiv(getPterm(tr).symb()); }
+    bool isIntNDiv(SymRef sr) const { return sr == sym_Int_NDIV; }
+
+    bool isMod(PTRef tr)    const { return isMod(getPterm(tr).symb()); }
     bool isMod(SymRef sr)   const { return sr == sym_Int_MOD; }
+    bool isNMod(PTRef tr)   const { return isNMod(getPterm(tr).symb()); }
+    bool isNMod(SymRef sr)  const { return sr == sym_Int_NMOD; }
+
+    bool isAbs(PTRef tr) const { return isIntAbs(tr) or isRealAbs(tr); }
+    bool isAbs(SymRef sr) const { return isIntAbs(sr) or isRealAbs(sr); }
+    bool isIntAbs(PTRef tr) const { return isIntAbs(getPterm(tr).symb()); }
+    bool isRealAbs(PTRef tr) const { return isRealAbs(getPterm(tr).symb()); }
+    bool isIntAbs(SymRef sr)   const { return sr == sym_Int_ABS; }
+    bool isRealAbs(SymRef sr) const { return sr == sym_Real_ABS; }
 
     bool isNumEq(SymRef sr) const { return isEquality(sr) and isSortNum(sym_store[sr][0]); }
     bool isNumEq(PTRef tr) const { return isNumEq(getPterm(tr).symb()); }
@@ -290,7 +314,7 @@ public:
     bool isNumVar(PTRef tr) const { return isNumVar(getPterm(tr).symb()); }
     bool isNumVarOrIte(SymRef sr) const { return isNumVar(sr) || isIte(sr); }
     bool isNumVarOrIte(PTRef tr) const { return isNumVarOrIte(getPterm(tr).symb()); }
-    bool isNumVarLike(SymRef tr) const { return isNumVarOrIte(tr) or isIntDiv(tr) or isMod(tr) or isNTimes(tr) or (hasUFs() and isUF(tr)); }
+    bool isNumVarLike(SymRef tr) const { return isNumVarOrIte(tr) or isIntDiv(tr) or isMod(tr) or isNTimes(tr) or isNMod(tr) or isIntNDiv(tr) or (hasUFs() and isUF(tr)); }
     bool isNumVarLike(PTRef tr) const { return isNumVarLike(getPterm(tr).symb()); }
 
     bool isZero(SymRef sr) const { return isIntZero(sr) or isRealZero(sr); }
@@ -362,6 +386,9 @@ public:
     // Mod
     PTRef mkMod(vec<PTRef> && args);
     PTRef mkMod(PTRef first, PTRef second) { return mkMod(vec<PTRef>{first, second}); }
+
+    // Abs
+    PTRef mkAbs(PTRef p);
 
     // Leq
     PTRef mkLeq(vec<PTRef> const & args);

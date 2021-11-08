@@ -41,6 +41,12 @@ class NonlinearConfig : public DefaultRewriterConfig {
         }
         if (logic.isNTimes(nonlinTerm)) {
             termName = ntimesPrefix + id;
+        } else if (logic.isNMod(nonlinTerm)) {
+            termName = nmodPrefix + id;
+        } else if (logic.isIntNDiv(nonlinTerm)) {
+            termName = ndivPrefix + id;
+        } else if (logic.isRealNDiv(nonlinTerm)) {
+            termName = ndivisionPrefix + id;
         }
         return logic.mkVar(logic.getSortRef(nonlinTerm), termName.c_str());
     }
@@ -49,18 +55,18 @@ public:
     NonlinearConfig(ArithLogic & logic) : logic(logic) {}
 
     PTRef rewrite(PTRef term) override {
-        if (logic.isNTimes(term)) {
+        if (logic.isNTimes(term) or logic.isNMod(term) or logic.isIntNDiv(term) or logic.isRealNDiv(term)) {
             // check cache first
             auto it = nonlinCache.find(term);
             bool inCache = (it != nonlinCache.end());
-            PTRef ntimes = inCache ? it->second : freshNonlinearity(term);
+            PTRef nlsubst = inCache ? it->second : freshNonlinearity(term);
             if (not inCache) {
-                nonlinCache.insert({term, ntimes});
+                nonlinCache.insert({term, nlsubst});
             }
             if (not inCache) {
                 // todo: Add constraints for example for a nonlinear modulo?
             }
-            return ntimes;
+            return nlsubst;
         }
         return term;
     }
