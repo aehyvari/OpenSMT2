@@ -48,10 +48,15 @@ protected:
     static const std::string tk_real_plus;
     static const std::string tk_int_plus;
     static const std::string tk_real_times;
+    static const std::string tk_real_ntimes;
     static const std::string tk_int_times;
+    static const std::string tk_int_ntimes;
     static const std::string tk_real_div;
+    static const std::string tk_real_ndiv;
     static const std::string tk_int_div;
+    static const std::string tk_int_ndiv;
     static const std::string tk_int_mod;
+    static const std::string tk_int_nmod;
     static const std::string tk_real_leq;
     static const std::string tk_int_leq;
     static const std::string tk_real_lt;
@@ -75,6 +80,7 @@ protected:
     SymRef              sym_Real_MINUS;
     SymRef              sym_Real_PLUS;
     SymRef              sym_Real_TIMES;
+    SymRef              sym_Real_NTIMES;
     SymRef              sym_Real_DIV;
     SymRef              sym_Real_EQ;
     SymRef              sym_Real_LEQ;
@@ -96,6 +102,7 @@ protected:
     SymRef              sym_Int_MINUS;
     SymRef              sym_Int_PLUS;
     SymRef              sym_Int_TIMES;
+    SymRef              sym_Int_NTIMES;
     SymRef              sym_Int_DIV;
     SymRef              sym_Int_MOD;
     SymRef              sym_Int_EQ;
@@ -157,6 +164,8 @@ public:
 
     SymRef get_sym_Int_TIMES () const { return sym_Int_TIMES; }
     SymRef get_sym_Real_TIMES () const { return sym_Real_TIMES; }
+    SymRef get_sym_Int_NTIMES () const { return sym_Int_NTIMES; }
+    SymRef get_sym_Real_NTIMES () const { return sym_Real_NTIMES; }
     SymRef get_sym_Int_DIV () const { return sym_Int_DIV; }
     SymRef get_sym_Int_MOD () const { return sym_Int_MOD; }
     SymRef get_sym_Real_DIV () const { return sym_Real_DIV; }
@@ -198,6 +207,7 @@ public:
     }
     void checkHasReals() const { if (not hasReals()) throw OsmtApiException("Reals not defined for logic"); }
     void checkHasIntegers() const { if (not hasIntegers()) throw OsmtApiException("Integers not defined for logic"); }
+    void checkHasNonlinears() const { if (not hasNonlinears()) throw OsmtApiException("Nonlinear operators not defined for logic"); }
 
     bool isPlus(SymRef sr) const { return isIntPlus(sr) or isRealPlus(sr); }
     bool isPlus(PTRef tr) const { return isPlus(getPterm(tr).symb()); }
@@ -225,6 +235,13 @@ public:
     bool isRealTimes(PTRef tr) const { return isRealTimes(getPterm(tr).symb()); }
     bool isIntTimes(SymRef sr) const { return sr == sym_Int_TIMES; }
     bool isRealTimes(SymRef sr) const { return sr == sym_Real_TIMES; }
+
+    bool isNTimes(SymRef sr) const { return isIntNTimes(sr) or isRealNTimes(sr); }
+    bool isNTimes(PTRef tr) const { return isNTimes(getPterm(tr).symb()); }
+    bool isIntNTimes(PTRef tr) const { return isIntNTimes(getPterm(tr).symb()); }
+    bool isRealNTimes(PTRef tr) const { return isRealNTimes(getPterm(tr).symb()); }
+    bool isIntNTimes(SymRef sr) const { return sr == sym_Int_NTIMES; }
+    bool isRealNTimes(SymRef sr) const { return sr == sym_Real_NTIMES; }
 
     bool isRealDiv(PTRef tr) const { return isRealDiv(getPterm(tr).symb()); }
     bool isRealDiv(SymRef sr) const { return sr == sym_Real_DIV; }
@@ -273,7 +290,7 @@ public:
     bool isNumVar(PTRef tr) const { return isNumVar(getPterm(tr).symb()); }
     bool isNumVarOrIte(SymRef sr) const { return isNumVar(sr) || isIte(sr); }
     bool isNumVarOrIte(PTRef tr) const { return isNumVarOrIte(getPterm(tr).symb()); }
-    bool isNumVarLike(SymRef tr) const { return isNumVarOrIte(tr) || isIntDiv(tr) || isMod(tr) || (hasUFs() and isUF(tr)); }
+    bool isNumVarLike(SymRef tr) const { return isNumVarOrIte(tr) or isIntDiv(tr) or isMod(tr) or isNTimes(tr) or (hasUFs() and isUF(tr)); }
     bool isNumVarLike(PTRef tr) const { return isNumVarLike(getPterm(tr).symb()); }
 
     bool isZero(SymRef sr) const { return isIntZero(sr) or isRealZero(sr); }
@@ -306,6 +323,7 @@ public:
 
     SymRef getPlusForSort(SRef sort) const;
     SymRef getTimesForSort(SRef sort) const;
+    SymRef getNTimesForSort(SRef sort) const;
     SymRef getMinusForSort(SRef sort) const;
 
     PTRef getZeroForSort(SRef sort) const;
@@ -397,6 +415,8 @@ protected:
     opensmt::pair<FastRational, PTRef> sumToNormalizedPair(PTRef sum);
     opensmt::pair<FastRational, PTRef> sumToNormalizedIntPair(PTRef sum);
     opensmt::pair<FastRational, PTRef> sumToNormalizedRealPair(PTRef sum);
+
+    bool needsNonlinearMult(vec<PTRef> const & args) const;
 };
 
 // Determine for two multiplicative terms (* k1 v1) and (* k2 v2), v1 !=

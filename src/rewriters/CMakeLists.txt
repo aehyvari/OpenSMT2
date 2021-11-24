@@ -8,5 +8,6 @@ install(FILES
     Substitutor.h
     Rewriter.h
     DivModRewriter.h
+    NonlinearRewriter.h
     DESTINATION ${INSTALL_HEADERS_DIR}
     )

@@ -162,6 +162,7 @@ class Logic {
     bool hasUFs() const { return opensmt::QFLogicToProperties.at(logicType).ufProperty.hasUF; }
     bool hasIntegers() const { return opensmt::QFLogicToProperties.at(logicType).arithProperty.hasInts; }
     bool hasReals() const { return opensmt::QFLogicToProperties.at(logicType).arithProperty.hasReals; }
+    bool hasNonlinears() const { return opensmt::QFLogicToProperties.at(logicType).arithProperty.arithType == opensmt::Arithmetic_t::Nonlinear; }
 
   protected:
     PTRef       mkFun         (SymRef f, vec<PTRef>&& args);

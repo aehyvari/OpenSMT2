@@ -21,8 +21,11 @@ const std::string ArithLogic::tk_int_neg   = "-";
 const std::string ArithLogic::tk_int_minus = "-";
 const std::string ArithLogic::tk_int_plus  = "+";
 const std::string ArithLogic::tk_int_times = "*";
+const std::string ArithLogic::tk_int_ntimes = ".*";
 const std::string ArithLogic::tk_int_div   = "div";
+const std::string ArithLogic::tk_int_ndiv   = ".div";
 const std::string ArithLogic::tk_int_mod   = "mod";
+const std::string ArithLogic::tk_int_nmod   = ".mod";
 const std::string ArithLogic::tk_int_lt    = "<";
 const std::string ArithLogic::tk_int_leq   = "<=";
 const std::string ArithLogic::tk_int_gt    = ">";
@@ -36,7 +39,9 @@ const std::string ArithLogic::tk_real_neg   = "-";
 const std::string ArithLogic::tk_real_minus = "-";
 const std::string ArithLogic::tk_real_plus  = "+";
 const std::string ArithLogic::tk_real_times = "*";
+const std::string ArithLogic::tk_real_ntimes = ".*";
 const std::string ArithLogic::tk_real_div   = "/";
+const std::string ArithLogic::tk_real_ndiv   = "./";
 const std::string ArithLogic::tk_real_lt    = "<";
 const std::string ArithLogic::tk_real_leq   = "<=";
 const std::string ArithLogic::tk_real_gt    = ">";
@@ -59,6 +64,7 @@ ArithLogic::ArithLogic(opensmt::Logic_t type)
     , sym_Real_MINUS(declareFun_NoScoping_LeftAssoc(tk_real_minus, sort_REAL, {sort_REAL, sort_REAL}))
     , sym_Real_PLUS(declareFun_Commutative_NoScoping_LeftAssoc(tk_real_plus, sort_REAL, {sort_REAL, sort_REAL}))
     , sym_Real_TIMES(declareFun_Commutative_NoScoping_LeftAssoc(tk_real_times, sort_REAL, {sort_REAL, sort_REAL}))
+    , sym_Real_NTIMES(declareFun_Commutative_NoScoping_LeftAssoc(tk_real_ntimes, sort_REAL, {sort_REAL, sort_REAL}))
     , sym_Real_DIV(declareFun_NoScoping_LeftAssoc(tk_real_div, sort_REAL, {sort_REAL, sort_REAL}))
     , sym_Real_EQ(sortToEquality[sort_REAL])
     , sym_Real_LEQ(declareFun_NoScoping_Chainable(tk_real_leq, sort_BOOL, {sort_REAL, sort_REAL}))
@@ -78,6 +84,7 @@ ArithLogic::ArithLogic(opensmt::Logic_t type)
     , sym_Int_MINUS(declareFun_NoScoping_LeftAssoc(tk_int_minus, sort_INT, {sort_INT, sort_INT}))
     , sym_Int_PLUS(declareFun_Commutative_NoScoping_LeftAssoc(tk_int_plus, sort_INT, {sort_INT, sort_INT}))
     , sym_Int_TIMES(declareFun_Commutative_NoScoping_LeftAssoc(tk_int_times, sort_INT, {sort_INT, sort_INT}))
+    , sym_Int_NTIMES(declareFun_Commutative_NoScoping_LeftAssoc(tk_int_ntimes, sort_INT, {sort_INT, sort_INT}))
     , sym_Int_DIV(declareFun_NoScoping_LeftAssoc(tk_int_div, sort_INT, {sort_INT, sort_INT}))
     , sym_Int_MOD(declareFun_NoScoping(tk_int_mod, sort_INT, {sort_INT, sort_INT}))
     , sym_Int_EQ(sortToEquality[sort_INT])
@@ -97,6 +104,11 @@ SymRef ArithLogic::getPlusForSort(SRef sort) const {
 SymRef ArithLogic::getTimesForSort(SRef sort) const {
     assert (sort == getSort_int() or sort == getSort_real());
     return sort == getSort_int() ? get_sym_Int_TIMES() : get_sym_Real_TIMES();
+}
+
+SymRef ArithLogic::getNTimesForSort(SRef sort) const {
+    assert (sort == getSort_int() or sort == getSort_real());
+    return sort == getSort_int() ? get_sym_Int_NTIMES() : get_sym_Real_NTIMES();
 }
 
 SymRef ArithLogic::getMinusForSort(SRef sort) const {
@@ -429,15 +441,31 @@ PTRef ArithLogic::mkTimes(vec<PTRef> && args)
     args.clear();
     SymRef s_new;
     simp.simplify(getTimesForSort(returnSort), flatten_args, s_new, args);
-    PTRef tr = mkFun(s_new, std::move(args));
-    // Either a real term or, if we constructed a multiplication of a
-    // constant and a sum, a real sum.
-    if (isNumTerm(tr) || isPlus(tr) || isUF(tr) || isIte(tr))
-        return tr;
-    else {
-        auto termStr = pp(tr);
-        throw LANonLinearException(termStr.c_str());
+
+    // check whether we need to use the nonlinear multiplication symbol
+    if (isTimes(s_new)) {
+        s_new = needsNonlinearMult(args) ? getNTimesForSort(getSortRef(s_new)) : s_new;
     }
+    if (not hasNonlinears() and isNTimes(s_new)) {
+        throw LANonLinearException(getSymName(s_new));
+    }
+    PTRef tr = mkFun(s_new, std::move(args));
+
+    // Either a real term or, if we constructed a multiplication of a
+    // constant and a sum, a real sum, or nonlinear multiplication
+    assert(isNumTerm(tr) or isPlus(tr) or isUF(tr) or isIte(tr) or isNTimes(tr));
+    return tr;
+}
+
+bool ArithLogic::needsNonlinearMult(vec<PTRef> const & args) const {
+    int constCounter = 0;
+    for (PTRef tr: args) {
+        if (not isConstant(tr)) {
+            if (++constCounter > 1)
+                break;
+        }
+    }
+    return constCounter > 1;
 }
 
 SymRef ArithLogic::getLeqForSort(SRef sr) const {
@@ -455,7 +483,7 @@ PTRef ArithLogic::mkBinaryLeq(PTRef lhs, PTRef rhs) {
         return v1 <= v2 ? getTerm_true() : getTerm_false();
     }
     // Should be in the form that on one side there is a constant
-    // and on the other there is a sum
+    // and on the other there is a sum or a nonlinear multiplication
     PTRef sum_tmp = lhs == getZeroForSort(argSort) ? rhs : rhs == getZeroForSort(argSort) ? mkNeg(lhs) : mkPlus(rhs, mkNeg(lhs));
     // "sum_tmp = rhs - lhs" so the inequality is "0 <= sum_tmp"
     if (isConstant(sum_tmp)) {
@@ -632,7 +660,7 @@ PTRef ArithLogic::insertTerm(SymRef sym, vec<PTRef>&& terms)
         return mkMinus(std::move(terms));
     if (isPlus(sym))
         return mkPlus(std::move(terms));
-    if (isTimes(sym))
+    if (isTimes(sym) or isNTimes(sym))
         return mkTimes(std::move(terms));
     if (isRealDiv(sym))
         return mkRealDiv(std::move(terms));
@@ -740,8 +768,9 @@ void SimplifyConst::simplify(SymRef s, vec<PTRef> const & args, SymRef & s_new, 
     else {
         if (const_idx.size() > 1) {
             vec<PTRef> const_terms;
-            for (int i = 0; i < const_idx.size(); i++)
-                const_terms.push(args[const_idx[i]]);
+            for (auto idx : const_idx) {
+                const_terms.push(args[idx]);
+            }
             PTRef tr = simplifyConstOp(const_terms);
             assert(tr != PTRef_Undef);
 
@@ -763,8 +792,8 @@ void SimplifyConst::simplify(SymRef s, vec<PTRef> const & args, SymRef & s_new, 
         }
 
     }
-//    // A single argument for the operator, and the operator is identity
-//    // in that case
+    // A single argument for the operator, and the operator is identity
+    // in that case
     if (args_new.size() == 1 && (l.isPlus(s_new) || l.isTimes(s_new) )) {
         PTRef ch_tr = args_new[0];
         args_new.clear();
@@ -799,7 +828,7 @@ void SimplifyConstTimes::constSimplify(SymRef s, vec<PTRef> const & terms, SymRe
             s_new = l.getPterm(l.getZeroForSort(l.getSortRef(s))).symb();
             return;
         }
-        if ( not l.isOne(tr)) {
+        if (not l.isOne(tr)) {
             if (l.isPlus(tr)) {
                 plus = tr;
             } else if (l.isConstant(tr)) {

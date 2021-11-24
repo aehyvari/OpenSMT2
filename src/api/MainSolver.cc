@@ -33,6 +33,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "UFLATheory.h"
 #include "LATheory.h"
 #include "LATHandler.h"
+#include "NATheory.h"
 #include "OsmtApiException.h"
 #include "ModelBuilder.h"
 #include "IteHandler.h"
@@ -371,6 +372,11 @@ std::unique_ptr<Theory> MainSolver::createTheory(Logic & logic, SMTConfig & conf
         {
             ArithLogic & liaLogic = dynamic_cast<ArithLogic &>(logic);
             theory = new LATheory<ArithLogic,LATHandler>(config, liaLogic);
+            break;
+        }
+        case Logic_t::QF_NIA: {
+            ArithLogic &niaLogic = dynamic_cast<ArithLogic &>(logic);
+            theory = new NATheory<ArithLogic, LATHandler>(config, niaLogic);
             break;
         }
         case Logic_t::QF_RDL:
