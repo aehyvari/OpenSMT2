@@ -219,3 +219,11 @@ target_sources(SortsTest
 
 target_link_libraries(SortsTest OpenSMT gtest gtest_main)
 gtest_add_tests(TARGET SortsTest)
+
+add_executable(FSBVTest)
+target_sources(FSBVTest
+        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/test_FSBV.cc"
+        )
+
+target_link_libraries(FSBVTest OpenSMT gtest gtest_main)
+gtest_add_tests(TARGET FSBVTest)
