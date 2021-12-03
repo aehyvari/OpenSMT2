@@ -606,6 +606,9 @@ PTRef Logic::mkImpl(vec<PTRef> && args) {
 }
 
 PTRef Logic::mkBinaryEq(PTRef lhs, PTRef rhs) {
+    if (getSortRef(lhs) != getSortRef(rhs)) {
+        throw OsmtApiException("Sort mismatch in equality: " + printSort(getSortRef(lhs)) + " != " + printSort(getSortRef(rhs)));
+    }
     if (lhs == rhs) return getTerm_true();
     if (isConstant(lhs) && isConstant(rhs))
         return getTerm_false();
