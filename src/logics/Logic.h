@@ -269,6 +269,7 @@ public:
     bool        peekSortSymbol(SortSymbol const &, SSymRef&);
     SSymRef     declareSortSymbol(SortSymbol symbol);
     SRef        getSort(SSymRef, vec<SRef> && args);
+    SRef        getIndexedSort(SRef inexedSort, std::string const & idx);
 
     PTRef       mkBoolVar     (const char* name);
 
