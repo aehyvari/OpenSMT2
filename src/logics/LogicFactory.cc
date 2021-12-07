@@ -6,6 +6,7 @@
 
 #include "ArithLogic.h"
 #include "BVLogic.h"
+#include "FSBVLogic.h"
 #include "OsmtApiException.h"
 
 #include <array>
@@ -16,6 +17,7 @@ std::array<std::string, 19> logicToName = {{"Undef", "Empty", "QF_UF", "QF_CUF",
 
 opensmt::Logic_t opensmt::getLogicFromString(const std::string& name) {
     if (name == "QF_UF") return opensmt::Logic_t::QF_UF;
+    if (name == "QF_BV") return opensmt::Logic_t::QF_BV;
     if (name == "QF_LRA") return opensmt::Logic_t::QF_LRA;
     if (name == "QF_RDL") return opensmt::Logic_t::QF_RDL;
     if (name == "QF_LIA") return opensmt::Logic_t::QF_LIA;
@@ -57,6 +59,11 @@ Logic * opensmt::LogicFactory::getInstance(Logic_t logicType) {
         case Logic_t::QF_CUF:
         {
             l = new BVLogic(logicType);
+            break;
+        }
+        case Logic_t::QF_BV:
+        {
+            l = new FSBVLogic(logicType);
             break;
         }
         default:
