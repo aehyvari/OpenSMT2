@@ -70,7 +70,8 @@ namespace osmttokens {
         t_simplify,
         t_writefuns,
         t_let,
-        t_echo
+        t_echo,
+        t_idx,
     };
 
     inline const std::unordered_map<token, std::string> tokenToName = {
@@ -110,7 +111,8 @@ namespace osmttokens {
         {t_simplify, "simplify"},
         {t_writefuns, "write-funs"},
         {t_let, "let"},
-        {t_echo, "echo"}
+        {t_echo, "echo"},
+        {t_idx, "_"},
     };
 
     struct smt2token {

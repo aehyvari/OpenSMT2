@@ -21,6 +21,10 @@ class FSBVLogic : public Logic {
     Map<BitWidth_t, SRef, BitWidth_t_Hash> bitWidthToBitVectorSort;
     Map<SRef, bool, SRefHash> bitVectorSorts;
     Map<SRef, BitWidth_t, SRefHash> bitWidthSortToBitWidth;
+
+    static constexpr const char *BVHexPrefix = "#x";
+    static constexpr const char *BVBinPrefix = "#b";
+
     static constexpr const char *tk_bvconcat = "concat";
     static constexpr const char *tk_bvbasesort = "BitVec";
     static constexpr const char *tk_bvnot = "bvnot";
@@ -56,6 +60,22 @@ class FSBVLogic : public Logic {
     Map<SRef, SymRef, SRefHash> ult_syms;
 
     SRef makeBitWidthSortForBW(BitWidth_t m);
+
+    bool isBitVectorSort(SRef sr) const { return sort_store[sr].getSymRef() == sym_IndexedSort and sort_store[sr].getSize() == 2 and sort_store[sort_store[sr][0]].getSymRef() == sym_BVBaseSort; }
+
+    SymRef mkBVConcatSym(SRef lhs, SRef rhs);
+    SymRef mkBVNegSym(SRef a);
+    SymRef mkBVNotSym(SRef a);
+    SymRef mkBVAndSym(SRef a);
+    SymRef mkBVOrSym(SRef a);
+    SymRef mkBVAddSym(SRef a);
+    SymRef mkBVMulSym(SRef a);
+    SymRef mkBVUdivSym(SRef a);
+    SymRef mkBVUremSym(SRef a);
+    SymRef mkBVSHLSym(SRef a);
+    SymRef mkBVLSHRSym(SRef a);
+    SymRef mkBVULTSym(SRef a);
+
 public:
     FSBVLogic(opensmt::Logic_t type);
 
@@ -75,7 +95,10 @@ public:
     bool yieldsSortBV(SymRef sr) const { return bitVectorSorts.has(getSortRef(sr)); }
     bool yieldsSortBV(PTRef tr) const { return yieldsSortBV(getSymRef(tr)); }
 
+    bool isBVConcat(SymRef sr) const { return tk_bvconcat == getSymName(sr); }
+
     PTRef mkBVConcat(PTRef lhs, PTRef rhs);
+
     PTRef mkBVNeg(PTRef a);
     PTRef mkBVNot(PTRef a);
 
@@ -95,6 +118,8 @@ public:
     PTRef mkBVSHL(PTRef a, PTRef shift);
     PTRef mkBVLSHR(PTRef a, PTRef shift);
     PTRef mkBVULT(PTRef lhs, PTRef rhs);
+
+    PTRef resolveTerm(char const * s, vec<PTRef> && args, char ** msg) override;
 };
 
 #endif //OPENSMT_FSBVLOGIC_H

@@ -308,8 +308,13 @@ attribute_value: spec_const
 
 identifier: TK_SYM
         { $$ = new ASTNode(SYM_T, $1); }
-    | '(' '_' TK_SYM numeral_list ')'
-        { $$ = new ASTNode(SYM_T, $3); $$->children = $4; }
+    | '(' '_' TK_SYM TK_NUM ')'
+        {
+          $$ = new ASTNode(IDX_T, NULL);
+          $$->children = new std::vector<ASTNode*>();
+          $$->children->insert($$->children->begin(), new ASTNode(NUM_T, $4));
+          $$->children->insert($$->children->begin(), new ASTNode(SYM_T, $3));
+        }
     ;
 
 sort: identifier
