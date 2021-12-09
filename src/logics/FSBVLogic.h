@@ -120,6 +120,8 @@ public:
     PTRef mkBVULT(PTRef lhs, PTRef rhs);
 
     PTRef resolveTerm(char const * s, vec<PTRef> && args, char ** msg) override;
+
+    char * printSym(SymRef sr) const override { return isBVConst(sr) ? strdup(getSymName(sr)) : Logic::printSym(sr); }
 };
 
 #endif //OPENSMT_FSBVLOGIC_H
