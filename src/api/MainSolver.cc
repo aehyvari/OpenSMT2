@@ -38,7 +38,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "IteHandler.h"
 #include "RDLTHandler.h"
 #include "IDLTHandler.h"
-#include "FSBVLogic.h"
+#include "FSBVTheory.h"
 
 #include <thread>
 #include <fcntl.h>
@@ -364,7 +364,7 @@ std::unique_ptr<Theory> MainSolver::createTheory(Logic & logic, SMTConfig & conf
         case Logic_t::QF_BV:
         {
             FSBVLogic & bvLogic = dynamic_cast<FSBVLogic &>(logic);
-            theory = new UFTheory(config, bvLogic);
+            theory = new FSBVTheory(config, bvLogic);
             break;
         }
 
