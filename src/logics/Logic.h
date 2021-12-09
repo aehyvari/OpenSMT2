@@ -398,7 +398,6 @@ public:
 
     PTRef learnEqTransitivity(PTRef); // Learn limited transitivity information
 
-
     bool hasQuotableChars(std::string const & name) const;
     bool isReservedWord(std::string const & name) const;
     bool isAmbiguousUninterpretedNullarySymbolName(std::string_view name) const { return term_store.isAmbiguousNullarySymbolName(name); };
@@ -410,7 +409,7 @@ public:
     std::string printTerm          (PTRef tr, bool l, bool s) const { return printTerm_(tr, l, s); }
     std::string pp(PTRef tr) const; // A pretty printer
 
-    std::string   printSym          (SymRef sr) const;
+    virtual std::string printSym   (SymRef sr) const;
     virtual void termSort(vec<PTRef>& v) const;// { sort(v, LessThan_PTRef()); }
 
     void  purify           (PTRef r, PTRef& p, lbool& sgn) const;//{p = r; sgn = l_True; while (isNot(p)) { sgn = sgn^1; p = getPterm(p)[0]; }}
