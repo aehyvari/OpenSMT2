@@ -221,13 +221,13 @@ BVRef FSBVBitBlaster::bbConstant(PTRef tr)
         asgns[0] = logic.getTerm_true();
     else if (logic.isFalse(tr))
         ; // already ok
-    else
-    {
+    else {
         const std::string value = logic.getSymName(tr);
-
-        assert((value.length()-2)*4 == static_cast<unsigned>(bw)); // TODO: Fix when constants are in binary
-        for (unsigned int i = 0 ; i < bw; i ++) {
-            asgns[i] = value[bw-i-1] == '1' ? logic.getTerm_true() : logic.getTerm_false();
+        assert((value.length()-2) == static_cast<unsigned>(bw));
+        for (unsigned int i = 0 ; i < bw; ++i) {
+            unsigned int idx = bw-i+1;
+            assert(value[idx] == '1' or value[idx] == '0');
+            asgns[i] = value[idx] == '1' ? logic.getTerm_true() : logic.getTerm_false();
         }
     }
     // Save result and return
