@@ -25,12 +25,14 @@ bool FSBVTheory::simplify(vec<PFRef> const & formulas, PartitionManager & pmanag
         vec<PTRef> bvFormulas;
         FSBVBitBlaster bitBlaster(logic);
         topLevelConjuncts(logic, fla, bvFormulas);
+        PTRef out = logic.getTerm_true();
         for (PTRef tr : bvFormulas) {
             if (logic.isBoolAtom(tr)) continue;
-            std::cout << logic.pp(tr) << std::endl;
-            PTRef out = bitBlaster.bbPredicate(tr);
-            std::cout << logic.pp(out) << std::endl;
+            out = logic.mkAnd(bitBlaster.bbPredicate(tr), out);
         }
+        subs_res = computeSubstitutions(out);
+        fla = flaFromSubstitutionResult(subs_res);
+        pfstore[formulas[curr]].root = fla;
         return false;
     }
 }
