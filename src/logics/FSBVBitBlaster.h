@@ -16,7 +16,6 @@ class FSBVBitBlaster {
 
     static constexpr const char * s_add = "add";
     static constexpr const char * s_mul = "mul";
-    static constexpr const char * s_ule = "ule";
 
     // Predicates
     PTRef bbUlt(PTRef tr);
