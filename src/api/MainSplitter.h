@@ -13,12 +13,11 @@
 class MainSplitter : public MainSolver {
 
 public:
-    static std::unique_ptr<SimpSMTSolver> createInnerSolver(SMTConfig & config, THandler & thandler);
+    static std::unique_ptr<SMTSolver> createInnerSolver(SMTConfig & config, THandler & thandler);
 
-    MainSplitter(std::unique_ptr<Theory> t,std::unique_ptr<TermMapper> tm, std::unique_ptr<THandler> th,
-                 std::unique_ptr<SimpSMTSolver> ss, Logic & logic, SMTConfig & config, std::string name)
-                 :
-                 MainSolver(std::move(t), std::move(tm), std::move(th), std::move(ss),logic,config, std::move(name))
+    MainSplitter(std::unique_ptr<Theory> t, std::unique_ptr<TermMapper> tm, std::unique_ptr<THandler> th,
+                 std::unique_ptr<SMTSolver> ss, Logic & logic, SMTConfig & config, std::string name)
+                 : MainSolver(std::move(t), std::move(tm), std::move(th), std::move(ss), logic, config, std::move(name))
                  {}
 
     std::vector<std::string> getPartitionClauses();

@@ -54,7 +54,7 @@ void MainSplitter::writeSplits(std::string const & baseName) const {
     }
 }
 
-std::unique_ptr<SimpSMTSolver> MainSplitter::createInnerSolver(SMTConfig & config, THandler & thandler) {
+std::unique_ptr<SMTSolver> MainSplitter::createInnerSolver(SMTConfig & config, THandler & thandler) {
     if (config.sat_split_type() == spt_lookahead) {
         return std::make_unique<LookaheadSplitter>(config, thandler);
     } else {

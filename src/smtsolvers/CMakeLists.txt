@@ -5,6 +5,8 @@ add_library(smtsolvers OBJECT ""
 		LookaheadSplitter.h
 		ScatterSplitter.cc
 		ScatterSplitter.h
+		ClausePrinter.cc
+		ClausePrinter.h
 		SplitContext.h
 		SplitData.cc
 		SplitData.h
@@ -24,6 +26,8 @@ PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/CoreSMTSolver.cc"
 PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/ScatterSplitter.cc"
 PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/SplitData.cc"
 PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/GhostSMTSolver.cc"
+PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/ClausePrinter.h"
+PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/ClausePrinter.cc"
 PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/TheoryIF.cc"
 PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/TheoryInterpolator.h"
 PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/Debug.cc"
@@ -45,7 +49,8 @@ target_sources(proof
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/Proof.h"
     PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/Proof.cc"
 )
-install(FILES TheoryInterpolator.h
+
+install(FILES TheoryInterpolator.h Proof.h
         DESTINATION ${INSTALL_HEADERS_DIR})
 
 

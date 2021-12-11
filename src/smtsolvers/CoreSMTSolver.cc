@@ -67,8 +67,8 @@ namespace opensmt {
 // Constructor/Destructor:
 
 CoreSMTSolver::CoreSMTSolver(SMTConfig & c, THandler& t )
-    : config           (c)
-    , theory_handler   (t)
+    : SMTSolver(t)
+    , config           (c)
     , verbosity        (c.verbosity())
     , init             (false)
     // Parameters: (formerly in 'SearchParams')

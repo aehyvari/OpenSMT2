@@ -86,7 +86,6 @@ class CoreSMTSolver : public SMTSolver
     friend class LookaheadScoreDeep;
 protected:
     SMTConfig & config;         // Stores Config
-    THandler  & theory_handler; // Handles theory
     bool        verbosity;
     bool        init;
     enum class ConsistencyAction { BacktrackToZero, ReturnUndef, SkipToSearchBegin, NoOp };
@@ -95,15 +94,15 @@ public:
     // Constructor/Destructor:
     //
     CoreSMTSolver(SMTConfig&, THandler&);
-    virtual ~CoreSMTSolver();
+    ~CoreSMTSolver() override;
     void     initialize       () override;
-    void     clearSearch      ();  // Backtrack SAT solver and theories to decision level 0
+    void     clearSearch      () override;  // Backtrack SAT solver and theories to decision level 0
 
     // Problem specification:
     //
 protected:
     void  addVar_    (Var v); // Ensure that var v exists in the solver
-    Var   newVar(bool polarity, bool dvar) override;//    (bool polarity = true, bool dvar = true); // Add a new variable with parameters specifying variable mode.
+    virtual Var newVar(bool polarity, bool dvar);//    (bool polarity = true, bool dvar = true); // Add a new variable with parameters specifying variable mode.
 public:
     void    addVar(Var v) override; // Anounce the existence of a variable to the solver
     bool    addOriginalClause(const vec<Lit> & ps);
@@ -147,14 +146,14 @@ public:
 
     lbool   modelValue (Lit p) const override; // The value of a literal in the last model. The last call to solve must have been satisfiable.
     int     nAssigns   ()      const;       // The current number of assigned literals.
-    int     nClauses   ()      const;       // The current number of original clauses.
+    int     nClauses   ()      const override; // The current number of original clauses.
     int     nLearnts   ()      const;       // The current number of learnt clauses.
-    int     nVars      ()      const;       // The current number of variables.
+    int     nVars      ()      const override; // The current number of variables.
     int     nFreeVars  ()      const;
 
     void fillBooleanVars(ModelBuilder & modelBuilder) override;
 
-    Proof const & getProof() const { assert(proof); return *proof; }
+    Proof const & getProof() const override { assert(proof); return *proof; }
 
     // Resource contraints:
     //
@@ -175,9 +174,9 @@ public:
     void        pushBacktrackPoint ( );
     void        popBacktrackPoint  ( );
     void        reset              ( );
-    inline void restoreOK          ( )       { ok = true; conflict_frame = 0; }
+    inline void restoreOK          ( ) override { ok = true; conflict_frame = 0; }
     inline bool isOK               ( ) const override { return ok; } // FALSE means solver is in a conflicting state
-    inline int  getConflictFrame   ( ) const { assert(not isOK()); return conflict_frame; }
+    inline int  getConflictFrame   ( ) const override { assert(not isOK()); return conflict_frame; }
 
     template<class C>
     void     printSMTClause   (std::ostream &, const C& );
