@@ -30,6 +30,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "LookaheadSMTSolver.h"
 #include "LookaheadSplitter.h"
 #include "GhostSMTSolver.h"
+#include "ClausePrinter.h"
 #include "UFLATheory.h"
 #include "LATheory.h"
 #include "LATHandler.h"
@@ -348,6 +349,8 @@ std::unique_ptr<SMTSolver> MainSolver::createInnerSolver(SMTConfig & config, THa
         solver = new LookaheadSplitter(config, thandler);
     else if (config.use_ghost_vars())
         solver = new GhostSMTSolver(config, thandler);
+    else if (config.print_clauses_only())
+        solver = new ClausePrinter(config, thandler);
     else
         solver = new SimpSMTSolver(config, thandler);
 
