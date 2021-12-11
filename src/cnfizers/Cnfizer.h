@@ -35,7 +35,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <unordered_set>
 
-class SimpSMTSolver;
+class SMTSolver;
 class THandler;
 struct SMTConfig;
 

@@ -65,8 +65,6 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 
 #include "Timer.h"
 
-class Proof;
-class ModelBuilder;
 
 // Helper method to print Literal to a stream
 std::ostream& operator <<(std::ostream& out, Lit l); // MB: Feel free to find a better place for this method.
@@ -80,13 +78,11 @@ struct Pair { A first; B second; };
 //=================================================================================================
 // Solver -- the main class:
 
-class CoreSMTSolver
+class CoreSMTSolver : public SMTSolver
 {
     friend class LookaheadScoreClassic;
     friend class LookaheadScoreDeep;
 protected:
-    SMTConfig & config;         // Stores Config
-    THandler  & theory_handler; // Handles theory
     bool      verbosity;
     bool      init;
 public:
@@ -103,7 +99,7 @@ public:
     //
 protected:
     void  addVar_    (Var v); // Ensure that var v exists in the solver
-    virtual Var newVar(bool polarity, bool dvar);//    (bool polarity = true, bool dvar = true); // Add a new variable with parameters specifying variable mode.
+    Var   newVar(bool polarity, bool dvar) override;//    (bool polarity = true, bool dvar = true); // Add a new variable with parameters specifying variable mode.
 public:
     void    addVar(Var v); // Anounce the existence of a variable to the solver
     bool    addOriginalClause(const vec<Lit> & ps);
@@ -119,7 +115,8 @@ public:
     //
     bool    simplify     ();                        // Removes already satisfied clauses.
     void    declareVarsToTheories();                 // Declare the seen variables to the theories
-    bool    solve        ( const vec< Lit > & assumps );                 // Search for a model that respects a given set of assumptions.
+    lbool   solve        (const vec< Lit > & assumps) override; // Search for a model that respects a given set of assumptions.
+
     void    crashTest    (int, Var, Var);           // Stress test the theory solver
 
     void    toDimacs     (FILE* f, const vec<Lit>& assumps);            // Write CNF to file in DIMACS-format.
@@ -766,11 +763,11 @@ inline bool     CoreSMTSolver::withinBudget() const
 // pure bool do not give a safe interface. Either interrupts must be possible to turn off here, or
 // all calls to solve must return an 'lbool'. I'm not yet sure which I prefer.
 
-inline bool     CoreSMTSolver::solve  (const vec<Lit>& assumps)
+inline lbool CoreSMTSolver::solve  (const vec<Lit>& assumps)
 {
     budgetOff();
     setAssumptions(assumps);
-    return solve_() == l_True;
+    return solve_();
 }
 
 inline void     CoreSMTSolver::toDimacs(const char* file)
