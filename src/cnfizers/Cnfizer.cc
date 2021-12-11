@@ -47,7 +47,7 @@ Cnfizer::Cnfizer ( SMTConfig       &config_
                    , Logic         &logic_
                    , PartitionManager &pmanager_
                    , TermMapper    &tmap
-                   , SimpSMTSolver &solver_
+                   , SMTSolver &solver_
                  ) :
       solver   (solver_)
     , config   (config_  )

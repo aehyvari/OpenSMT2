@@ -150,7 +150,6 @@ class MainSolver
 
     static std::unique_ptr<SimpSMTSolver> createInnerSolver(SMTConfig& config, THandler& thandler);
 
-
   public:
 
     MainSolver(Logic& logic, SMTConfig& conf, std::string name)
@@ -163,7 +162,7 @@ class MainSolver
             pmanager(logic),
             config(conf),
             pfstore(getTheory().pfstore),
-            ts( config, logic, pmanager, *term_mapper, *smt_solver ),
+            ts(config, logic, pmanager, *term_mapper, *smt_solver),
             solver_name {std::move(name)},
             check_called(0),
             status(s_Undef),

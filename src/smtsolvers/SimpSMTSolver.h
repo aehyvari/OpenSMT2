@@ -57,13 +57,13 @@ class SimpSMTSolver : public CoreSMTSolver
     SimpSMTSolver (SMTConfig &, THandler&);
     ~SimpSMTSolver( );
 
-    void         initialize           ( );
+    void initialize() override;
 
     // Problem specification:
     //
     Var     newVar    (bool polarity = true, bool dvar = true) override;
 
-    bool addOriginalSMTClause(const vec<Lit> & smt_clause, opensmt::pair<CRef, CRef> & inOutCRefs);
+    bool addOriginalSMTClause(const vec<Lit> & smt_clause, opensmt::pair<CRef, CRef> & inOutCRefs) override;
 public:
 
     bool    substitute(Var v, Lit x);  // Replace all occurences of v with x (may cause a contradiction).
@@ -75,7 +75,7 @@ public:
 
     // Solving:
     //
-    lbool    solve       (const vec<Lit>& assumps);
+    lbool    solve       (const vec<Lit>& assumps) override;
     lbool    solveLimited(const vec<Lit>& assumps);
 
     bool    eliminate   (bool turn_off_elim = false);  // Perform variable elimination based simplification. 
