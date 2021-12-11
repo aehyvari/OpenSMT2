@@ -39,7 +39,7 @@ public:
            , Logic&         logic_
            , PartitionManager &pmanager_
            , TermMapper&    tmap_
-           , SMTSolver& solver_
+           , SMTSolver&     solver_
            )
       : Cnfizer( config_
                 , logic_

@@ -66,8 +66,6 @@ namespace opensmt
 
 CoreSMTSolver::CoreSMTSolver(SMTConfig & c, THandler& t )
     : SMTSolver        (c, t)
-    , config           (c)
-    , theory_handler   (t)
     , verbosity        (c.verbosity())
     , init             (false)
     , stop             (false)

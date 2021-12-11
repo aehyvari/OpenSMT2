@@ -57,7 +57,7 @@ class SimpSMTSolver : public CoreSMTSolver
     SimpSMTSolver (SMTConfig &, THandler&);
     ~SimpSMTSolver( );
 
-    void         initialize           () override;
+    void initialize() override;
 
     // Problem specification:
     //

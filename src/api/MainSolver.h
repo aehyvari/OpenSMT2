@@ -152,7 +152,6 @@ class MainSolver
 
     static std::unique_ptr<SMTSolver> createInnerSolver(SMTConfig& config, THandler& thandler);
 
-
     MainSolver(std::unique_ptr<Theory> th, std::unique_ptr<TermMapper> tm, std::unique_ptr<THandler> thd,
                std::unique_ptr<SMTSolver> ss, Logic& logic, SMTConfig& conf, std::string name)
             :
