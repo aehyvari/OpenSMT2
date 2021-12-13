@@ -239,7 +239,7 @@ PTRef FSBVBitBlaster::bbUlt(PTRef tr)
     assert(tr != PTRef_Undef);
 
     // Return previous result if computed
-    // TODO: chache results!
+    // TODO: cache results!
 
     // Allocate new result
     assert(logic.getPterm(tr).size() == 2 );
