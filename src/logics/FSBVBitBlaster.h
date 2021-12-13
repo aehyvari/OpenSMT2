@@ -10,6 +10,8 @@
 #include "bvsolver/BVStore.h"
 #include "OsmtInternalException.h"
 
+// Representation of the bits: least significant bit first (little-endian)
+
 class FSBVBitBlaster {
     FSBVLogic & logic;
     BVStore bs;
