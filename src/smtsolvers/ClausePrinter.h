@@ -6,16 +6,18 @@
 #define OPENSMT_CLAUSEPRINTER_H
 
 #include "SMTSolver.h"
+#include <unordered_set>
 
-class ClausePrinter : public SMTSolver {
+class ModelCounter : public SMTSolver {
     ClauseAllocator ca;
     Proof proof;
     Map<Var, bool, VarHash> vars;
-    int numberOfVars;
+    int numberOfVarsSeen;
     std::vector<vec<Lit>> clauses;
+    std::unordered_map<PTRef, std::unordered_set<Var>, PTRefHash> bvTermToVars;
 public:
-    ClausePrinter(SMTConfig & c, THandler & t) : SMTSolver(c, t), ca(0), proof(ca), numberOfVars(0) { }
-    lbool solve (vec<Lit> const & assumps) override;
+    ModelCounter(SMTConfig & c, THandler & t) : SMTSolver(c, t), ca(0), proof(ca), numberOfVarsSeen(0) { }
+    lbool solve (vec<Lit> const & assumps) override { return l_Undef; }
     void setFrozen(Var, bool) override { }
     bool isOK() const override { return true; }
     void addVar(Var v) override;
@@ -32,6 +34,8 @@ public:
 
     int getConflictFrame() const override { return -1; }
     void clearSearch() override {}
+
+    void count(vec<PTRef> const & terms) const;
 
 protected:
     Var newVar (bool = true, bool = true) override;

@@ -351,7 +351,7 @@ std::unique_ptr<SMTSolver> MainSolver::createInnerSolver(SMTConfig & config, THa
     else if (config.use_ghost_vars())
         solver = new GhostSMTSolver(config, thandler);
     else if (config.print_clauses_only())
-        solver = new ClausePrinter(config, thandler);
+        solver = new ModelCounter(config, thandler);
     else
         solver = new SimpSMTSolver(config, thandler);
 
