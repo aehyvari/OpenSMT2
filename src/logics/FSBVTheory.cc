@@ -30,6 +30,7 @@ bool FSBVTheory::simplify(vec<PFRef> const & formulas, PartitionManager &, int c
             if (logic.isBoolAtom(tr)) continue;
             out = logic.mkAnd(bitBlaster.bbPredicate(tr), out);
         }
+        bbTermToBVTerm = bitBlaster.getBitBlastedTermToBitVectorTermMap();
         subs_res = computeSubstitutions(out);
         fla = flaFromSubstitutionResult(subs_res);
         pfstore[formulas[curr]].root = fla;
