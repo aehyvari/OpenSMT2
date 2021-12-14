@@ -15,7 +15,7 @@ main(int argc, char** argv)
     Opensmt* osmt = pre();
     SMTConfig& c = osmt->getConfig();
     MainSolver& mainSolver = osmt->getMainSolver();
-    SimpSMTSolver& solver = osmt->getSolver();
+    SMTSolver& solver = osmt->getSolver();
     auto & logic = osmt->getLRALogic();
 
     const char* msg;

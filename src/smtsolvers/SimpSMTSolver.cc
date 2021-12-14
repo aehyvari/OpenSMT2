@@ -117,9 +117,8 @@ Var SimpSMTSolver::newVar(bool sign, bool dvar)
 
 
 
-lbool SimpSMTSolver::solve_(bool do_simp, bool turn_off_simp)
+lbool SimpSMTSolver::solve_()
 {
-    vec<Var> extra_frozen;
     lbool    result = l_True;
 
     // Added Code
