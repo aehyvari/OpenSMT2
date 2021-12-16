@@ -61,11 +61,7 @@ BVRef FSBVBitBlaster::bbTerm(PTRef tr) {
     if (logic.isBVLshr(sr)) return bbLshr(tr);
     if (logic.isBVVar(sr)) return bbVar(tr);
 
-    char * name = logic.pp(tr);
-    std::string name_s(name);
-    free(name);
-    throw OsmtInternalException("Unknown bit-vector operation " + name_s);
-    // Unreachable
+    throw OsmtInternalException("Unknown bit-vector operation " + logic.pp(tr));
 }
 
 BVRef FSBVBitBlaster::bbAdd(PTRef tr) {

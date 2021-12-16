@@ -11,7 +11,7 @@
 
 static SolverDescr descr_bb_solver("BitBlaster", "BitBlaster for counting models?");
 
-bool FSBVTheory::simplify(vec<PFRef> const & formulas, PartitionManager & pmanager, int curr) {
+bool FSBVTheory::simplify(vec<PFRef> const & formulas, PartitionManager &, int curr) {
     if (keepPartitions()) {
         throw OsmtInternalException("Mode not supported for QF_BV yet");
     } else {
