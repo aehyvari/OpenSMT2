@@ -62,6 +62,10 @@ PTRef FSBVLogic::mkBVConst(BitWidth_t m, unsigned c) {
     return tr;
 }
 
+PTRef FSBVLogic::mkBVConst(SymRef sym) {
+    return mkConst(getSortRef(sym), sym_store.getName(sym));
+}
+
 SymRef FSBVLogic::mkBVAddSym(SRef a) {
 
     if (not isBitVectorSort(a)) {
@@ -298,6 +302,38 @@ PTRef FSBVLogic::mkBVUlt(PTRef lhs, PTRef rhs) {
         throw OsmtApiException(why);
     }
     return mkFun(BVULT, {lhs, rhs});
+}
+
+PTRef FSBVLogic::insertTerm(SymRef sym, vec<PTRef> && args) {
+    if (isBVConcat(sym)) {
+        return mkBVConcat(args[0], args[1]);
+    } else if (isBVAdd(sym)) {
+        return mkBVAdd(std::move(args));
+    } else if (isBVNeg(sym)) {
+        return mkBVNeg(args[0]);
+    } else if (isBVNot(sym)) {
+        return mkBVNot(args[0]);
+    } else if (isBVAnd(sym)) {
+        return mkBVAnd(std::move(args));
+    } else if (isBVOr(sym)) {
+        return mkBVOr(std::move(args));
+    } else if (isBVMul(sym)) {
+        return mkBVMul(std::move(args));
+    } else if (isBVUdiv(sym)) {
+        return mkBVUdiv(args[0], args[1]);
+    } else if (isBVUrem(sym)) {
+        return mkBVUrem(args[0], args[1]);
+    } else if (isBVShl(sym)) {
+        return mkBVShl(args[0], args[1]);
+    } else if (isBVLshr(sym)) {
+        return mkBVLshr(args[0], args[1]);
+    } else if (isBVUlt(sym)) {
+        return mkBVUlt(args[0], args[1]);
+    } else if (isBVConst(sym)) {
+        return mkBVConst(sym);
+    } else {
+        return Logic::insertTerm(sym, std::move(args));
+    }
 }
 
 PTRef FSBVLogic::resolveTerm(char const * s, vec<PTRef> && args, char ** msg) {
