@@ -530,6 +530,7 @@ const char* SMTConfig::o_sat_split_test_cube_and_conquer = ":test-cube-and-conqu
 const char* SMTConfig::o_sat_split_randomize_lookahead = ":randomize-lookahead";
 const char* SMTConfig::o_sat_split_randomize_lookahead_buf = ":randomize-lookahead-buf"; // The n best found literals
 const char* SMTConfig::o_sat_remove_symmetries = ":remove-symmetries";
+const char* SMTConfig::o_count_models = ":count-models";
 const char* SMTConfig::o_dryrun = ":dryrun";
 const char* SMTConfig::o_do_substitutions = ":do-substitutions";
 const char* SMTConfig::o_smt_split_format = ":split-format";
