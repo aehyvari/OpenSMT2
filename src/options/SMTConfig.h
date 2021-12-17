@@ -296,6 +296,7 @@ public:
   static const char* o_sat_split_randomize_lookahead;
   static const char* o_sat_split_randomize_lookahead_buf;
   static const char* o_produce_models;
+  static const char* o_count_models;
   static const char* o_sat_remove_symmetries;
   static const char* o_dryrun;
   static const char* o_do_substitutions;
@@ -779,6 +780,10 @@ public:
       return optionTable.has(o_sat_split_randomize_lookahead_buf) ?
               optionTable[o_sat_split_randomize_lookahead_buf]->getValue().numval :
               1; }
+
+  bool count_models() const {
+      return optionTable.has(o_count_models) ? optionTable[o_count_models]->getValue().numval : false;
+  }
 
   int remove_symmetries() const
     { return optionTable.has(o_sat_remove_symmetries) ?

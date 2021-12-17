@@ -28,6 +28,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "smt2tokens.h"
 #include "ArithLogic.h"
 #include "LogicFactory.h"
+#include "MainCounter.h"
 
 #include <string>
 #include <sstream>
@@ -270,6 +271,15 @@ void Interpret::interp(ASTNode& n) {
                 } else {
                     notify_formatted(true,
                                      "Option to produce interpolants has not been set, skipping this command ...");
+                }
+                break;
+            }
+            case t_countmodels: {
+                if (config.count_models()) {
+                    countModels(n);
+                } else {
+                    notify_formatted(true,
+                                     "Option to count models not set.  Ignoring command. ");
                 }
                 break;
             }
@@ -1151,6 +1161,37 @@ SRef Interpret::sortFromASTNode(ASTNode const & node) const {
     return SRef_Undef;
 }
 
+void Interpret::countModels(ASTNode const & n)
+{
+    MainCounter & counter = static_cast<MainCounter&>(*main_solver);
+    auto exps = *n.children;
+    vec<PTRef> modelTerms;
+    LetRecords letRecords;
+    letRecords.pushFrame();
+    for (auto key : nameToTerm.getKeys()) {
+        letRecords.addBinding(key, nameToTerm[key]);
+    }
+
+    for (auto e : exps) {
+        ASTNode const & c = *e;
+        modelTerms.push(parseTerm(c, letRecords));
+    }
+
+    letRecords.popFrame();
+
+    std::string printedTerms;
+    for (int i = 0; i < modelTerms.size(); i++) {
+        char * str = logic->pp(modelTerms[i]);
+        printedTerms += str + std::string(i == modelTerms.size()-1 ? "" : " ");
+        free(str);
+    }
+    std::string outString = "; Counting models for terms: " + printedTerms;
+    notify_formatted(false, outString.c_str());
+
+    counter.countModels(modelTerms);
+
+}
+
 void Interpret::getInterpolants(const ASTNode& n)
 {
     auto exps = *n.children;
@@ -1243,11 +1284,7 @@ void Interpret::initializeLogic(opensmt::Logic_t logicType) {
 }
 
 MainSolver& Interpret::createMainSolver(SMTConfig & config, const char*  logic_name) {
-
-    if (config.sat_split_type() == spt_none) {
-        return *new MainSolver(*logic, config, std::string(logic_name) + " solver");
-    }
-    else {
+    if (config.sat_split_type() != spt_none) {
         auto th = MainSolver::createTheory(*logic, config);
         auto tm = std::unique_ptr<TermMapper>(new TermMapper(*logic));
         auto thandler = new THandler(*th,*tm);
@@ -1259,7 +1296,13 @@ MainSolver& Interpret::createMainSolver(SMTConfig & config, const char*  logic_n
                                  config,
                                  std::string(logic_name)
                                  + " splitter");
+    } else if (config.count_models()) {
+        auto theory = MainSolver::createTheory(*logic, config);
+        auto termMapper = std::unique_ptr<TermMapper>(new TermMapper(*logic));
+        auto thandler = new THandler(*theory, *termMapper);
+        return *new MainCounter(std::move(theory), std::move(termMapper), std::unique_ptr<THandler>(thandler),
+                MainCounter::createInnerSolver(config, *thandler), *logic, config, std::string(logic_name) + " counter");
+    } else {
+        return *new MainSolver(*logic, config, std::string(logic_name) + " solver");
     }
 }
-
-
