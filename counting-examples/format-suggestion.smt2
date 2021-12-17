@@ -1,3 +1,5 @@
+(set-option :count-models true)
+
 (set-logic QF_BV)
 (set-info :smt-lib-version 2.0)
 
@@ -24,5 +26,5 @@
 (assert (and (= rho_1 rho_2) (and phi_1 phi_2)))
 
 (count-models v)
-(check-sat)
+;(check-sat)
 (exit)
