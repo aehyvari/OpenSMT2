@@ -12,7 +12,7 @@
 void ModelCounter::count(vec<PTRef> const & terms) const {
     // print all clauses
     auto & theory = dynamic_cast<FSBVTheory&>(theory_handler.getTheory());
-    int totalNumOfVars = nVars();
+    unsigned int totalNumOfVars = nVars();
 
     // Include the vars that need to be counted but were optimised away in simplification to total var count
     for (PTRef countTerm : terms) {
