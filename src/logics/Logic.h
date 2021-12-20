@@ -39,13 +39,12 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <cstring>
 #include <cstdlib>
 
-
 class SStore;
 
 class Logic {
-  public:
+public:
     using SubstMap = MapWithKeys<PTRef,PTRef,PTRefHash>;
-  protected:
+protected:
     static std::size_t abstractValueCount;
     static const char* e_argnum_mismatch;
     static const char* e_bad_constant;
@@ -176,7 +175,6 @@ class Logic {
 
     SRef        getUniqueArgSort(SymRef sr)           const;
     SRef        getUniqueArgSort(PTRef tr)            const { return getUniqueArgSort(getSymRef(tr)); }
-
     // Symbols
     const Symbol& getSym        (const SymRef s)        const { return sym_store[s]; }
     const Symbol& getSym        (const PTRef tr)        const { return getSym(getPterm(tr).symb()); }
@@ -277,7 +275,7 @@ public:
     void dumpHeaderToFile(std::ostream& dump_out) const;
     void dumpFormulaToFile(std::ostream& dump_out, PTRef formula, bool negate = false, bool toassert = true) const;
     void dumpChecksatToFile(std::ostream& dump_out) const;
-
+    std::string printString( PTRef formula, bool negate = false, bool toassert = false) const;
     void dumpFunctions(std::ostream& dump_out);// { vec<const char*> names; defined_functions.getKeys(names); for (int i = 0; i < names.size(); i++) dumpFunction(dump_out, names[i]); }
     void dumpFunction(std::ostream& dump_out, const char* tpl_name);// { if (defined_functions.has(tpl_name)) dumpFunction(dump_out, defined_functions[tpl_name]); else printf("; Error: function %s is not defined\n", tpl_name); }
     void dumpFunction(std::ostream& dump_out, const std::string s);// { dumpFunction(dump_out, s.c_str()); }
