@@ -14,6 +14,9 @@ void ModelCounter::count(vec<PTRef> const & terms) const {
     auto & theory = dynamic_cast<FSBVTheory&>(theory_handler.getTheory());
     unsigned int totalNumOfVars = nVars();
 
+    ofstream out;
+    out.open(config.get_counting_output_file());
+
     // Include the vars that need to be counted but were optimised away in simplification to total var count
     for (PTRef countTerm : terms) {
         BitWidth_t bitWidth = theory.getLogic().getRetSortBitWidth(countTerm);
@@ -26,13 +29,21 @@ void ModelCounter::count(vec<PTRef> const & terms) const {
         }
     }
 
-    std::cout << "p cnf " + std::to_string(totalNumOfVars) + " " + std::to_string(nClauses()) << std::endl;
+    std::string bbVarString("c ind ");
+    for (PTRef tr : terms) {
+        for (auto v : bvTermToVars.at(tr)) {
+            bbVarString += std::to_string(v+1) + " ";
+        }
+    }
+    out << bbVarString + "0\n";
+
+    out << "p cnf " + std::to_string(totalNumOfVars) + " " + std::to_string(nClauses()) << std::endl;
     for (vec<Lit> const & smtClause : clauses) {
         for (Lit l: smtClause) {
             Var v = var(l);
-            std::cout << (sign(l) ? -(v + 1) : (v + 1)) << " ";
+            out << (sign(l) ? -(v + 1) : (v + 1)) << " ";
         }
-        std::cout << "0" << std::endl;
+        out << "0" << std::endl;
     }
 }
 
