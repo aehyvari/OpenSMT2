@@ -163,7 +163,7 @@ BitBlaster::assertLit (PtAsgn pta)
 lbool
 BitBlaster::check( )
 {
-    const lbool res = solverP.solve( );
+    const lbool res = solverP.solve({});
 //    assert( res || (explanation.size() != 0) );
     return res;
 }

@@ -100,7 +100,7 @@ Cnfizer::solve(vec<FrameId>& en_frames)
             assumps[j++] = assumps[i];
     }
     assumps.shrink(i-j);
-    return solver.solve(assumps, !config.isIncremental(), config.isIncremental());
+    return solver.solve(assumps);
 
 }
 
