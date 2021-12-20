@@ -1,5 +1,5 @@
 (set-option :count-models true)
-
+(set-option :print-clauses-file "./counts.cnf")
 (set-logic QF_BV)
 (set-info :smt-lib-version 2.0)
 
