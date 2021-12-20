@@ -306,6 +306,7 @@ public:
   static const char* o_output_dir;
   static const char* o_ghost_vars;
   static const char* o_print_clauses_only;
+  static const char* o_print_clauses_file;
 
 private:
 
@@ -819,6 +820,14 @@ public:
           return optionTable[o_print_clauses_only]->getValue().numval != 0;
       }
       return false;
+  }
+
+  std::string get_counting_output_file() const {
+      if (optionTable.has(o_print_clauses_file)) {
+          return optionTable[o_print_clauses_file]->getValue().strval;
+      } else {
+          return "/dev/stdout";
+      }
   }
 
   int do_substitutions() const
