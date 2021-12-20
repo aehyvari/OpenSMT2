@@ -5,6 +5,12 @@ set_target_properties(OpenSMT-bin PROPERTIES
     OUTPUT_NAME opensmt
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
 
+set(PRIVATE_SOURCES_TO_ADD
+        "${CMAKE_CURRENT_SOURCE_DIR}/Interpret.cc"
+        )
+set(PUBLIC_SOURCES_TO_ADD
+        "${CMAKE_CURRENT_SOURCE_DIR}/Interpret.h"
+        )
 if (ENABLE_LINE_EDITING)
     if (NOT USE_READLINE)
         find_package(LibEdit REQUIRED)
