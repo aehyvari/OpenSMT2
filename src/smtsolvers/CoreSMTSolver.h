@@ -50,7 +50,6 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 
 #include "SMTSolver.h"
 #include "THandler.h"
-
 #include <cstdio>
 #include <iosfwd>
 #include <memory>
@@ -395,7 +394,6 @@ protected:
     void     analyzeFinal     (Lit p, vec<Lit>& out_conflict);                         // COULD THIS BE IMPLEMENTED BY THE ORDINARIY "analyze" BY SOME REASONABLE GENERALIZATION?
     bool     litRedundant     (Lit p, uint32_t abstract_levels);                       // (helper method for 'analyze()')
     virtual lbool search      (int nof_conflicts, int nof_learnts);                    // Search for a given number of conflicts.
-    virtual bool okContinue   () const;                                                // Check search termination conditions
     void     learntSizeAdjust ();                                                      // Adjust learnts size and print something
     void     reduceDB         ();                                                      // Reduce the set of learnt clauses.
     void     removeSatisfied  (vec<CRef>& cs);                                         // Shrink 'cs' to contain only non-satisfied clauses.
