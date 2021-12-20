@@ -280,6 +280,7 @@ public:
   static const char* o_dump_query_name;
   static const char* o_sat_dump_learnts;
   static const char* o_sat_split_type;
+  static const char* o_sat_solver_limit;
   static const char* o_sat_split_inittune;
   static const char* o_sat_split_midtune;
   static const char* o_sat_split_num;
@@ -743,6 +744,10 @@ public:
       return optionTable.has(o_sat_split_num) ?
               optionTable[o_sat_split_num]->getValue().numval :
               2; }
+  uint64_t sat_solver_limit() const {
+        return optionTable.has(o_sat_solver_limit) ?
+               optionTable[o_sat_solver_limit]->getValue().numval :
+               0; }
   int sat_split_fixvars() const {
       return optionTable.has(o_sat_split_fix_vars) ?
               optionTable[o_sat_split_fix_vars]->getValue().numval :
