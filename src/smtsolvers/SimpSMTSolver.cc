@@ -122,34 +122,8 @@ lbool SimpSMTSolver::solve_()
     vec<Var> extra_frozen;
     lbool    result = l_True;
 
-    if ( config.sat_preprocess_theory == 0 )
-        goto skip_theory_preproc;
-
-
-    opensmt_error( "preprocess theory has been temporairly disabled in this version" );
-
-skip_theory_preproc:
-
     // Added Code
     //=================================================================================================
-
-    // Assumptions must be temporarily frozen to run variable elimination:
-    for (int i = 0; i < assumptions.size(); i++)
-    {
-        Var v = var(assumptions[i]);
-
-        // If an assumption has been eliminated, remember it.
-        assert(!isEliminated(v));
-
-        if (!frozen[v])
-        {
-            // Freeze and store.
-            setFrozen(v, true);
-            extra_frozen.push(v);
-        }
-    }
-
-    result = lbool(eliminate());
 
 #ifdef STATISTICS
     CoreSMTSolver::preproc_time = cpuTime( );
@@ -165,10 +139,6 @@ skip_theory_preproc:
         // #ifndef NDEBUG
         verifyModel();
     }
-
-    // Unfreeze the assumptions that were frozen:
-    for (int i = 0; i < extra_frozen.size(); i++)
-        setFrozen(extra_frozen[i], false);
 
     return result;
 }
