@@ -31,6 +31,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <iostream>
 #include <assert.h>
 #include <sys/time.h>
+#include <chrono>
 #include <sys/resource.h>
 
 namespace opensmt {
