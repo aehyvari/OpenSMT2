@@ -117,7 +117,7 @@ int main( int argc, char * argv[] )
         }
     }
 
-    Interpret interpreter(c);
+    Interpret interpreter(c, *new Channel());
 
     if (argc - optind == 0) {
         c.setInstanceName("stdin");

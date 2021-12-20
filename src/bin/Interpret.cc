@@ -26,9 +26,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "Interpret.h"
 #include "smt2tokens.h"
-#include "MainSolver.h"
 #include "ArithLogic.h"
-#include "MainSplitter.h"
 #include "LogicFactory.h"
 
 #include <string>
@@ -156,7 +154,7 @@ void Interpret::interp(ASTNode& n) {
                         break;
                     }
                     initializeLogic(logic_type);
-                    main_solver.reset(new MainSolver(*logic, config, std::string(logic_name) + " solver"));
+                    main_solver.reset(&createMainSolver(config, logic_name));
                     main_solver->initialize();
                     notify_success();
                 }
@@ -580,7 +578,7 @@ bool Interpret::checkSat() {
         char* name = config.dump_state();
         if (!o_dump_state.isEmpty() && o_split == spt_none)
             writeState(name);
-        else if (o_split != spt_none) {
+        else if (o_split != spt_none and strcmp(config.output_dir(),"") != 0) {
             writeSplits_smtlib2(name);
         }
         free(name);
@@ -755,7 +753,7 @@ void Interpret::writeState(const char* filename)
 void Interpret::writeSplits_smtlib2(const char* filename)
 {
     char* msg;
-    std::unique_ptr<MainSplitter>(static_cast<MainSplitter*>(main_solver.release()))->writeSolverSplits_smtlib2(filename, &msg);
+    ((MainSplitter&) getMainSolver()).writeSolverSplits_smtlib2(filename, &msg);
 }
 
 bool Interpret::declareFun(ASTNode const & n) // (const char* fname, const vec<SRef>& args)
@@ -1244,6 +1242,26 @@ int Interpret::get_assertion_index(PTRef ref) {
 
 void Interpret::initializeLogic(opensmt::Logic_t logicType) {
     logic.reset(opensmt::LogicFactory::getInstance(logicType));
+}
+
+MainSolver& Interpret::createMainSolver(SMTConfig & config, const char*  logic_name) {
+
+    if (config.sat_split_type() == spt_none) {
+        return *new MainSolver(*logic, config, std::string(logic_name) + " solver");
+    }
+    else {
+        auto th = MainSolver::createTheory(*logic, config);
+        auto tm = std::unique_ptr<TermMapper>(new TermMapper(*logic));
+        auto thandler = new THandler(*th,*tm);
+        return *new MainSplitter(std::move(th),
+                                 std::move(tm),
+                                 std::unique_ptr<THandler>(thandler),
+                                 MainSplitter::createInnerSolver(config, *thandler, channel),
+                                 *logic,
+                                 config,
+                                 std::string(logic_name)
+                                 + " splitter");
+    }
 }
 
 
