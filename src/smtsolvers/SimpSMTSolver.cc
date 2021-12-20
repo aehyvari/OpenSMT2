@@ -130,7 +130,7 @@ lbool SimpSMTSolver::solve_()
 #endif
 
     if (result == l_True)
-        result = solve_();
+        result = CoreSMTSolver::solve_();
 
     if (result == l_True)
     {
