@@ -11,6 +11,7 @@ void MainCounter::countModels(vec<PTRef> const & terms) {
     initialize();
     sstat rval = MainSolver::simplifyFormulas();
     assert(rval == s_Undef);
+    (void)rval;
     auto & modelCounter = dynamic_cast<ModelCounter&>(*smt_solver);
     modelCounter.count(terms);
 }
