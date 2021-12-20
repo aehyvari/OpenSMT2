@@ -1249,7 +1249,7 @@ void Interpret::initializeLogic(opensmt::Logic_t logicType) {
 MainSolver& Interpret::createMainSolver(SMTConfig & config, const char*  logic_name) {
 
     if (config.sat_split_type() == spt_none) {
-        std::cout << "\033[1;32m [t solve] SimpleSMTSolver\033[0m"<< std::endl;
+//        std::cout << "; \033[1;32m [t solve] SimpleSMTSolver\033[0m"<< std::endl;
         return *new MainSolver(*logic, config, std::string(logic_name) + " solver");
     }
     else {

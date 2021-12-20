@@ -87,13 +87,13 @@ std::vector<std::string> MainSplitter::getSolverPartitions()
 std::unique_ptr<SimpSMTSolver> MainSplitter::createInnerSolver(SMTConfig & config, THandler & thandler, Channel& ch) {
     SimpSMTSolver* solver = nullptr;
     if (config.sat_split_type() == spt_scatter) {
-        std::cout << "\033[1;32m [t solve] ScatterSplitter\033[0m"<< std::endl;
+//        std::cout << "\033[1;32m [t solve] ScatterSplitter\033[0m"<< std::endl;
         solver = new ScatterSplitter(config, thandler, ch);
     }
         // to do
     else if (config.sat_split_type() == spt_lookahead)  {
         solver = new LookaheadSplitter(config, thandler);
-        std::cout << "\033[1;32m [t solve] LookaheadSplitter\033[0m"<< std::endl;
+//        std::cout << "\033[1;32m [t solve] LookaheadSplitter\033[0m"<< std::endl;
     }
     return std::unique_ptr<SimpSMTSolver>(solver);
 }
