@@ -16,12 +16,12 @@ namespace opensmt
 }
 
 ScatterSplitter::ScatterSplitter(SMTConfig & c, THandler & t, Channel& ch)
-        : SimpSMTSolver         (c, t)
-        , splitConfig           (config)
-        , channel (ch)
-        , trail_sent (0)
-        , firstTime (   true)
+        : SimpSMTSolver(c, t)
+        , splitConfig(config)
+        , channel(ch)
+        , firstTime(true)
         , shouldLearnClause(false)
+        , trail_sent(0)
 {
 }
 
