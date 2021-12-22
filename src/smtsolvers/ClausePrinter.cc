@@ -12,10 +12,11 @@
 void ModelCounter::count(vec<PTRef> const & terms) const {
     // print all clauses
     auto & theory = dynamic_cast<FSBVTheory&>(theory_handler.getTheory());
-    unsigned int totalNumOfVars = nVars();
 
     ofstream out;
     out.open(config.get_counting_output_file());
+
+    unsigned int numOfDisappearedAtoms = 0;
 
     // Include the vars that need to be counted but were optimised away in simplification to total var count
     for (PTRef countTerm : terms) {
@@ -23,21 +24,27 @@ void ModelCounter::count(vec<PTRef> const & terms) const {
         if (bvTermToVars.find(countTerm) != bvTermToVars.end()) {
             auto const & varSet = bvTermToVars.at(countTerm);
             assert(varSet.size() <= bitWidth);
-            totalNumOfVars += (bitWidth - varSet.size());
+            numOfDisappearedAtoms += (bitWidth - varSet.size());
         } else {
-            totalNumOfVars += bitWidth;
+            numOfDisappearedAtoms += bitWidth;
         }
     }
 
     std::string bbVarString("c ind ");
+
     for (PTRef tr : terms) {
         for (auto v : bvTermToVars.at(tr)) {
             bbVarString += std::to_string(v+1) + " ";
         }
     }
+    // Add phony vars for correct counting also to ind
+    for (unsigned int i = 0; i < numOfDisappearedAtoms; i++) {
+        bbVarString += std::to_string(nVars()+i+1) + " ";
+    }
+
     out << bbVarString + "0\n";
 
-    out << "p cnf " + std::to_string(totalNumOfVars) + " " + std::to_string(nClauses()) << std::endl;
+    out << "p cnf " + std::to_string(nVars() + numOfDisappearedAtoms) + " " + std::to_string(nClauses()) << std::endl;
     for (vec<Lit> const & smtClause : clauses) {
         for (Lit l: smtClause) {
             Var v = var(l);
