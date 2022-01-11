@@ -6,7 +6,7 @@
 #include "MainSplitter.h"
 #include "SplitData.h"
 #include "ScatterSplitter.h"
-#include <filesystem>
+//#include <filesystem>
 
 bool MainSplitter::writeSolverSplits_smtlib2(const char* file, char** msg) const
 {
@@ -15,7 +15,7 @@ bool MainSplitter::writeSolverSplits_smtlib2(const char* file, char** msg) const
     std::cout <<";Number of partition splits requested : "<<config.sat_split_num() << endl;
     std::cout<<";Number of partition splits created : " << splits.size() << endl;
     std::cout<<";Partition splits are located at \""<<config.output_dir()<<"\""<<endl;
-    std::filesystem::create_directory(config.output_dir());
+//    std::filesystem::create_directory(config.output_dir());
     int i = 0;
     for (const auto & split : splits) {
         vec<PTRef> conj_vec;
