@@ -125,7 +125,11 @@ TPropRes CoreSMTSolver::handleNewSplitClauses(SplitClauses & splitClauses) {
         }
         return cr;
     };
-
+    for (auto const & clause : splitClauses) {
+        for (Lit l : clause) {
+            addVar_(var(l));
+        }
+    }
     auto sortedIndices = sortByLastAssignedLevel(splitClauses, [this](Var v) { return vardata[v].level; });
 
     for (int index : sortedIndices) {

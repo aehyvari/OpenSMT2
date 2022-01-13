@@ -188,6 +188,8 @@ static const char* const spprefs_tterm   = "tterm";
 static const char* const spprefs_blind   = "blind";
 static const char* const spprefs_bterm   = "bterm";
 static const char* const spprefs_rand    = "random";
+static const char* const spprefs_noteq   = "noteq";
+static const char* const spprefs_eq   = "eq";
 
 static const char* const spformats_brief  = "brief";
 static const char* const spformats_full   = "full";
@@ -205,6 +207,8 @@ static const struct SpPref sppref_blind = { 1 };
 static const struct SpPref sppref_bterm = { 2 };
 static const struct SpPref sppref_rand  = { 3 };
 static const struct SpPref sppref_undef = { 4 };
+static const struct SpPref sppref_noteq = { 5 };
+static const struct SpPref sppref_eq = { 6 };
 
 static const struct SpFormat spformat_smt2  = { 0 };
 static const struct SpFormat spformat_osmt2 = { 1 };
@@ -796,6 +800,8 @@ public:
         if (strcmp(type, spprefs_blind) == 0) return sppref_blind;
         if (strcmp(type, spprefs_bterm) == 0) return sppref_bterm;
         if (strcmp(type, spprefs_rand)  == 0) return sppref_rand;
+        if (strcmp(type, spprefs_noteq)  == 0) return sppref_noteq;
+        if (strcmp(type, spprefs_eq)  == 0) return sppref_eq;
     }
       return sppref_blind;
   }

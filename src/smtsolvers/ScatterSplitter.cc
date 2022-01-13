@@ -50,8 +50,14 @@ Var ScatterSplitter::doActivityDecision() {
                 if (splitConfig.split_preference == sppref_tterm && !theory_handler.isDeclared(next)) {
                     discarded.push(next);
                     next = var_Undef;
+                } else if (splitConfig.split_preference == sppref_bterm && theory_handler.isDeclared(next)) {
+                    discarded.push(next);
+                    next = var_Undef;
                 }
-                else if (splitConfig.split_preference == sppref_bterm && theory_handler.isDeclared(next)) {
+                else if (splitConfig.split_preference == sppref_noteq && theory_handler.getLogic().isEquality(theory_handler.varToTerm(next))) {
+                    discarded.push(next);
+                    next = var_Undef;
+                } else if (splitConfig.split_preference == sppref_eq && not theory_handler.getLogic().isEquality(theory_handler.varToTerm(next))) {
                     discarded.push(next);
                     next = var_Undef;
                 }
@@ -180,7 +186,6 @@ lbool ScatterSplitter::search(int nof_conflicts, int nof_learnts)
             return l_Undef;
         }
         if (!okContinue()) {
-            std::cout<<";conflicts: "<<conflicts<<endl;
             return l_Undef;
         }
 
@@ -422,7 +427,7 @@ lbool ScatterSplitter::solve_()
         else splitConfig.split_next = -1;
 
         splitConfig.split_preference = config.sat_split_preference();
-
+        std::cout<<";split_preference: "<<config.sat_split_preference().t<<endl;
     }
     splitConfig.resource_units = config.sat_resource_units();
     splitConfig.resource_limit = config.sat_resource_limit();
