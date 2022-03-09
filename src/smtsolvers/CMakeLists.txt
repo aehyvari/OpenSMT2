@@ -12,6 +12,7 @@ add_library(smtsolvers OBJECT ""
 		SplitData.h
 		LAScore.h
 		LAScore.cc
+		SMTSolver.h
 		)
 
 target_sources(smtsolvers
@@ -54,6 +55,6 @@ install(FILES TheoryInterpolator.h Proof.h
         DESTINATION ${INSTALL_HEADERS_DIR})
 
 
-install(FILES SimpSMTSolver.h CoreSMTSolver.h ScatterSplitter.h
+install(FILES SimpSMTSolver.h CoreSMTSolver.h ScatterSplitter.h SMTSolver.h
 DESTINATION ${INSTALL_HEADERS_DIR})
 
