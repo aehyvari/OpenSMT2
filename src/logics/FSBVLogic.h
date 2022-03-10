@@ -19,7 +19,6 @@ class FSBVLogic : public Logic {
     };
     Map<BitWidth_t, SRef, BitWidth_t_Hash> bitWidthToBitWidthSort;
     Map<BitWidth_t, SRef, BitWidth_t_Hash> bitWidthToBitVectorSort;
-    Map<SRef, bool, SRefHash> bitVectorSorts;
     Map<SRef, BitWidth_t, SRefHash> bitWidthSortToBitWidth;
 
     static constexpr const char *BVHexPrefix = "#x";
@@ -61,7 +60,6 @@ class FSBVLogic : public Logic {
 
     SRef makeBitWidthSortForBW(BitWidth_t m);
 
-    bool isBitVectorSort(SRef sr) const { return sort_store[sr].getSymRef() == sym_IndexedSort and sort_store[sr].getSize() == 2 and sort_store[sort_store[sr][0]].getSymRef() == sym_BVBaseSort; }
 
     SymRef mkBVConcatSym(SRef lhs, SRef rhs);
     SymRef mkBVNegSym(SRef a);
@@ -83,13 +81,13 @@ public:
     virtual bool isBuiltinSort(SRef sr) const override { return (sort_store[sr].getSymRef() == sym_IndexedSort and sort_store[sr][0] == BVBaseSort) or Logic::isBuiltinSort(sr); }
     virtual bool isBuiltinConstant(SymRef sr) const override { return isBVConst(sr) || Logic::isBuiltinConstant(sr); }
 
+    bool isBitVectorSort(SRef sr) const { return sort_store[sr].getSymRef() == sym_IndexedSort and sort_store[sr].getSize() == 2 and sort_store[sort_store[sr][0]].getSymRef() == sym_BVBaseSort; }
     SRef makeBitVectorSortForBW(BitWidth_t m);
     BitWidth_t getBitWidth(SRef sr) const { assert(isBitVectorSort(sr)); return std::stoi(sort_store.getSortSymName(sort_store[sr][1])); }
     BitWidth_t getRetSortBitWidth(PTRef tr) const { SRef sr = getSortRef(tr); assert(isBitVectorSort(sr)); return getBitWidth(sr); }
 
-    bool yieldsSortBV(SymRef sr) const { return bitVectorSorts.has(getSortRef(sr)); }
+    bool yieldsSortBV(SymRef sr) const { return isBitVectorSort(getSortRef(sr)); }
     bool yieldsSortBV(PTRef tr) const { return yieldsSortBV(getSymRef(tr)); }
-    bool isBVSort(SRef sortRef) const { return bitVectorSorts.has(sortRef); }
 
     PTRef mkBVConstFromHex(std::string const & hexString);
     PTRef mkBVConstFromBin(std::string const & binString);

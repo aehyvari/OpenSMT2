@@ -43,7 +43,6 @@ SRef FSBVLogic::makeBitVectorSortForBW(BitWidth_t m) {
     bvSort = getSort(sym_IndexedSort, {BVBaseSort, bwSort});
 
     bitWidthToBitVectorSort.insert(m, bvSort);
-    bitVectorSorts.insert(bvSort, true);
     return bvSort;
 }
 

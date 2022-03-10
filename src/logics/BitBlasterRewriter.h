@@ -41,9 +41,9 @@ public:
 
     PTRef rewrite(PTRef tr) override {
         SymRef sr = logic.getSymRef(tr);
-        if (logic.isEquality(sr) and logic.isBVSort(logic.getUniqueArgSort(sr))) {
+        if (logic.isEquality(sr) and logic.isBitVectorSort(logic.getUniqueArgSort(sr))) {
             return bbEquality(tr);
-        } else if (logic.isDisequality(sr) and logic.isBVSort(logic.getUniqueArgSort(sr))) {
+        } else if (logic.isDisequality(sr) and logic.isBitVectorSort(logic.getUniqueArgSort(sr))) {
             return bbDisequality(tr);
         } else if (logic.isBVUlt(sr)) {
             return bbUlt(tr);
