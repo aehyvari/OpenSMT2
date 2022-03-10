@@ -1,6 +1,5 @@
 /*
  * Copyright (c) 2021, Antti Hyvarinen <antti.hyvarinen@gmail.com>
- * Copyright (c) 2021, Martin Blicha <martin.blicha@gmail.com>
  *
  * SPDX-License-Identifier: MIT
  */
@@ -90,6 +89,7 @@ public:
 
     bool yieldsSortBV(SymRef sr) const { return bitVectorSorts.has(getSortRef(sr)); }
     bool yieldsSortBV(PTRef tr) const { return yieldsSortBV(getSymRef(tr)); }
+    bool isBVSort(SRef sortRef) const { return bitVectorSorts.has(sortRef); }
 
     PTRef mkBVConstFromHex(std::string const & hexString);
     PTRef mkBVConstFromBin(std::string const & binString);
