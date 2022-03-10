@@ -3,6 +3,7 @@
 //
 
 #include "BitBlasterRewriter.h"
+#include <cmath>
 
 PTRef BitBlasterConfig::bbEquality(PTRef eq_tr) {
     Pterm & eq = logic.getPterm(eq_tr);
