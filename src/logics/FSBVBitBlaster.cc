@@ -83,9 +83,6 @@ BVRef FSBVBitBlaster::bbAdd(PTRef tr) {
     if (bs.has(tr)) return bs[tr];
 
     // Allocate new result
-    vec<PTRef> names = getBVVars(s_add, logic.getRetSortBitWidth(tr));
-
-    // Allocate new result
     vec<PTRef> result;
 
     PTRef arg1 = logic.getPterm(tr)[0];
@@ -119,7 +116,7 @@ BVRef FSBVBitBlaster::bbAdd(PTRef tr) {
     }
 
     // Save result and return
-    return bs.newBvector(names, result, tr);
+    return bs.newBvector(result, tr);
 }
 
 BVRef FSBVBitBlaster::bbVar(PTRef tr)
@@ -130,12 +127,9 @@ BVRef FSBVBitBlaster::bbVar(PTRef tr)
     if (bs.has(tr)) return bs[tr];
 
     // Allocate new result
-    vec<PTRef> names = getBVVars("bv", logic.getRetSortBitWidth(tr));
+    vec<PTRef> result = getBVVars("bv", logic.getRetSortBitWidth(tr));
 
-    vec<PTRef> result;
-    names.copyTo(result);
-
-    BVRef rval = bs.newBvector(names, result, tr);
+    BVRef rval = bs.newBvector(result, tr);
 
     return rval;
 }
@@ -146,9 +140,6 @@ BVRef FSBVBitBlaster::bbMul(PTRef tr)
     assert(logic.getPterm(tr).size() == 2 );
 
     if (bs.has(tr)) return bs[tr];
-
-    // Allocate new result
-    vec<PTRef> names = getBVVars(s_mul, logic.getRetSortBitWidth(tr));
 
     // Allocate new result
     vec<PTRef> result;
@@ -209,7 +200,7 @@ BVRef FSBVBitBlaster::bbMul(PTRef tr)
         }
     }
 
-    return bs.newBvector(names, result, tr);
+    return bs.newBvector(result, tr);
 }
 
 BVRef FSBVBitBlaster::bbConstant(PTRef tr)
@@ -219,8 +210,6 @@ BVRef FSBVBitBlaster::bbConstant(PTRef tr)
 
     if (bs.has(tr)) return bs[tr];
     BitWidth_t bw = logic.getRetSortBitWidth(tr);
-    // Allocate new result
-    vec<PTRef> names = getBVVars("c", bw);
 
     vec<PTRef> asgns;
     asgns.growTo(bw, logic.getTerm_false());
@@ -239,7 +228,7 @@ BVRef FSBVBitBlaster::bbConstant(PTRef tr)
         }
     }
     // Save result and return
-    return bs.newBvector(names, asgns, tr);
+    return bs.newBvector(asgns, tr);
 }
 
 PTRef FSBVBitBlaster::bbUlt(PTRef tr)
