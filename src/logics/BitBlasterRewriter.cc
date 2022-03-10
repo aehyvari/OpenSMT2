@@ -11,10 +11,12 @@ PTRef BitBlasterConfig::bbEquality(PTRef eq_tr) {
     BVRef rhs = store[eq[1]];
 
     assert(store[lhs].size() == store[rhs].size());
-
+    int size = store[lhs].size();
     // Produce the result
     vec<PTRef> result_args;
-    for (int i = 0; i < store[lhs].size(); ++ i) {
+    result_args.capacity(size);
+
+    for (int i = 0; i < size; ++ i) {
         result_args.push(logic.mkEq(store[lhs][i], store[rhs][i]));
     }
     PTRef res = logic.mkAnd(result_args);
@@ -24,6 +26,7 @@ PTRef BitBlasterConfig::bbEquality(PTRef eq_tr) {
 PTRef BitBlasterConfig::bbDisequality(PTRef diseq_tr) {
     Pterm & diseq = logic.getPterm(diseq_tr);
     vec<PTRef> args;
+    args.capacity((diseq.size() + (diseq.size()-1))/2);
     for (int i = 0; i < diseq.size(); i++) {
         for (int j = i+1; j < diseq.size(); j++) {
             args.push(logic.mkNot(bbEquality(logic.mkEq(diseq[i], diseq[j]))));
