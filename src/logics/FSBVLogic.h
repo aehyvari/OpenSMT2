@@ -13,13 +13,6 @@
 using BitWidth_t = uint32_t;
 
 class FSBVLogic : public Logic {
-    struct BitWidth_t_Hash{
-        uint32_t operator () (BitWidth_t bw) const {
-            return (uint32_t)bw; }
-    };
-    Map<BitWidth_t, SRef, BitWidth_t_Hash> bitWidthToBitWidthSort;
-    Map<BitWidth_t, SRef, BitWidth_t_Hash> bitWidthToBitVectorSort;
-    Map<SRef, BitWidth_t, SRefHash> bitWidthSortToBitWidth;
 
     static constexpr const char *BVHexPrefix = "#x";
     static constexpr const char *BVBinPrefix = "#b";
