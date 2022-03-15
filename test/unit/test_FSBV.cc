@@ -218,6 +218,12 @@ TEST_F(FSBVTest, test_mkSHL) {
     PTRef shl = logic.mkBVShl(a, b);
     ASSERT_NE(shl, PTRef_Undef);
     std::cout << logic.pp(shl) << std::endl;
+
+    PTRef c1 = logic.mkBVConst(8, 1);
+    PTRef c2 = logic.mkBVConst(8, 2);
+    shl = logic.mkBVShl(c1, c2);
+    PTRef eq = logic.mkEq(shl, logic.mkBVConst(8, 4));
+    ASSERT_EQ(BitBlasterRewriter(logic).rewrite(eq), logic.getTerm_true());
 }
 
 TEST_F(FSBVTest, test_mkLSHR) {
