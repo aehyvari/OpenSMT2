@@ -183,6 +183,15 @@ TEST_F(FSBVTest, test_mkUdiv) {
     PTRef udiv_a_b = logic.mkBVUdiv(a, b);
     ASSERT_NE(udiv_a_b, PTRef_Undef);
     std::cout << logic.pp(udiv_a_b) << std::endl;
+    PTRef c1 = logic.mkBVConst(8, 3);
+    PTRef c2 = logic.mkBVConst(8, 2);
+    PTRef div = logic.mkBVUdiv(c1, c2);
+    PTRef eq = logic.mkEq(div, logic.mkBVConst(8, 1));
+    ASSERT_EQ(BitBlasterRewriter(logic).rewrite(eq), logic.getTerm_true());
+    div = logic.mkBVUdiv(c1, logic.mkBVConst(8, 0));
+    std::cout << logic.pp(div) << std::endl;
+    eq = logic.mkEq(div, logic.mkBVConst(8, 1));
+    ASSERT_EQ(BitBlasterRewriter(logic).rewrite(eq), logic.getTerm_true());
 }
 
 TEST_F(FSBVTest, test_mkUrem) {
