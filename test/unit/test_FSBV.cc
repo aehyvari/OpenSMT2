@@ -85,6 +85,14 @@ TEST_F(FSBVTest, test_mkConcat) {
     PTRef conc = logic.mkBVConcat(a4, a5);
     std::cout << logic.pp(conc) << std::endl;
     ASSERT_NE(conc, PTRef_Undef);
+    BitBlasterRewriter bitBlaster(logic);
+    PTRef c1 = logic.mkBVConst(4, 0);
+    PTRef c2 = logic.mkBVConst(3, 7);
+    conc = logic.mkBVConcat(c1, c2);
+    PTRef eq = logic.mkEq(conc, logic.mkBVConst(7, 7));
+    std::cout << logic.pp(eq) << std::endl;
+    PTRef res = bitBlaster.rewrite(logic.mkEq(conc, logic.mkBVConst(7, 7)));
+    ASSERT_EQ(res, logic.getTerm_true());
 }
 
 TEST_F(FSBVTest, test_mkNeg) {
