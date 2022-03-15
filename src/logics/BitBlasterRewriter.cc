@@ -191,3 +191,21 @@ void BitBlasterConfig::bbAdd(PTRef add_tr) {
     // Save result and return
     store.newBvector(result, add_tr);
 }
+
+void BitBlasterConfig::bbConcat(PTRef concat_tr) {
+    Pterm const & concat = logic.getPterm(concat_tr);
+    BVRef a = store[concat[0]];
+    BVRef b = store[concat[1]];
+    auto size = store[a].size() + store[b].size();
+    assert(logic.getRetSortBitWidth(concat_tr) == static_cast<BitWidth_t>(size));
+    vec<PTRef> result;
+    result.capacity(size);
+    for (PTRef tr : store[b]) {
+        result.push(tr);
+    }
+    for (PTRef tr : store[a]) {
+        result.push(tr);
+    }
+    // Save result and return
+    store.newBvector(result, concat_tr);
+}
