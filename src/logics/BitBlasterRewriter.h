@@ -33,11 +33,11 @@ class BitBlasterConfig : public DefaultRewriterConfig {
     void bbOr(PTRef tr);
     void bbUdiv(PTRef tr);
     void bbUrem(PTRef tr);
+    void bbShl(PTRef tr);
 
     void notImplemented(PTRef tr) { throw OsmtInternalException(std::string("Not implemented: ") + logic.getSymName(tr)); }
 
     void bbNeg(PTRef tr) { notImplemented(tr); }
-    void bbShl(PTRef tr) { notImplemented(tr); }
     void bbLshr(PTRef tr) { notImplemented(tr); }
 
 public:

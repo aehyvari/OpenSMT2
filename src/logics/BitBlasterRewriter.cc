@@ -485,3 +485,49 @@ void BitBlasterConfig::bbUrem(PTRef rem_tr) {
     // Save result
     store.newBvector(result, rem_tr);
 }
+
+void BitBlasterConfig::bbShl(PTRef shl_tr) {
+    Pterm const & shl = logic.getPterm(shl_tr);
+    // Allocate new result
+    vec<PTRef> result;
+
+    vec<PTRef> acc;
+
+    BVRef a = store[shl[0]];
+    BVRef b = store[shl[1]];
+
+    assert(store[a].size() == store[b].size());
+    int size = store[a].size();
+    if (not opensmt::isPowOfTwo(size)) {
+        throw OsmtApiException("shl not supported for non-power-of-two bit widths currently");
+    }
+
+    int l = size;
+    int n = opensmt::getLogFromPowOfTwo(size);
+
+    std::vector<vec<PTRef>> ls;
+    for (int s = -1; s <= n-1; s++) {
+        ls.emplace_back();
+        for (int i = 0; i < l; i++) {
+            ls.back().push(PTRef_Undef);
+        }
+    }
+
+    auto ls_read = [](int s, int i, std::vector<vec<PTRef>> const & table) { return table[s+1][i]; };
+    auto ls_write = [](int s, int i, PTRef tr, std::vector<vec<PTRef>> & table) { table[s+1][i] = tr; };
+
+    for (int i = 0; i < l; i++) {
+        ls_write(-1, i, store[a][i], ls);
+    }
+
+    for (int s = 0; s <= n-1; s++) {
+        for (int i = 0; i < l; i++) {
+            if (i >= (1 << s)) {// i >= 2^s
+                ls_write(s, i, logic.mkIte(store[b][s], ls_read(s - 1, i - (1 << s), ls), ls_read(s - 1, i, ls)), ls);
+            } else {
+                ls_write(s, i, logic.mkIte(store[b][s], logic.getTerm_false(), ls_read(s - 1, i, ls)), ls);
+            }
+        }
+    }
+    store.newBvector(ls.back(), shl_tr);
+}
