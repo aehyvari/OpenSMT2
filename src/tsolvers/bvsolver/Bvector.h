@@ -100,6 +100,17 @@ class Bvector {
     const PTRef&    lsb         ()      const   { return operator[](0); }
     const PTRef&    msb         ()      const   { return operator[](size()-1); }
 
+    /**
+     * @note The function is unsafe: if used in a loop, the loop should in *absolutely no case* build new terms in the same Pterm allocator
+     * @return A pointer to the first child of the term
+     */
+    const PTRef* begin() const { return args; }
+    /**
+     * @note The function is unsafe: if used in a loop, the loop should in *absolutely no case* build new terms in the same Pterm allocator
+     * @return A pointer to right past the last child of the term
+     */
+    const PTRef* end() const { return args + size(); }
+
     bool     reloced     ()      const   { return header.reloced; }
     BVRef    relocation  ()      const   { return { args[0].x }; }
     void     relocate    (BVRef t)       { header.reloced = 1; args[0] = {t.x}; }
