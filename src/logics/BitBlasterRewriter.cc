@@ -249,3 +249,17 @@ void BitBlasterConfig::bbAnd(PTRef and_tr) {
     }
     store.newBvector(result, and_tr);
 }
+
+void BitBlasterConfig::bbOr(PTRef and_tr) {
+    Pterm const & and_ = logic.getPterm(and_tr);
+    BVRef a = store[and_[0]];
+    BVRef b = store[and_[1]];
+    assert(store[a].size() == store[b].size());
+    auto size = store[a].size();
+    vec<PTRef> result;
+    result.capacity(size);
+    for (auto i = 0; i < size; i++) {
+        result.push(logic.mkOr(store[a][i], store[b][i]));
+    }
+    store.newBvector(result, and_tr);
+}
