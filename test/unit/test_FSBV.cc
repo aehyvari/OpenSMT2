@@ -154,6 +154,12 @@ TEST_F(FSBVTest, test_mkOr) {
     PTRef or_a_b = logic.mkBVOr(a, b);
     ASSERT_NE(or_a_b, PTRef_Undef);
     std::cout << logic.pp(or_a_b) << std::endl;
+    PTRef c1 = logic.mkBVConst(4, 15);
+    PTRef c2 = logic.mkBVConst(4, 14);
+    PTRef or_ = logic.mkBVOr(c1, c2);
+    PTRef eq = logic.mkEq(or_, c1);
+    BitBlasterRewriter bitBlasterRewriter(logic);
+    ASSERT_EQ(bitBlasterRewriter.rewrite(eq), logic.getTerm_true());
 }
 
 TEST_F(FSBVTest, test_mkMul) {
