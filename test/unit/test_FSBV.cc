@@ -140,6 +140,12 @@ TEST_F(FSBVTest, test_mkAnd) {
     PTRef and_a_b = logic.mkBVAnd(a, b);
     ASSERT_NE(and_a_b, PTRef_Undef);
     std::cout << logic.pp(and_a_b) << std::endl;
+    PTRef c1 = logic.mkBVConst(4, 15);
+    PTRef c2 = logic.mkBVConst(4, 14);
+    PTRef and_ = logic.mkBVAnd(c1, c2);
+    PTRef eq = logic.mkEq(and_, c2);
+    BitBlasterRewriter bitBlasterRewriter(logic);
+    ASSERT_EQ(bitBlasterRewriter.rewrite(eq), logic.getTerm_true());
 }
 
 TEST_F(FSBVTest, test_mkOr) {
