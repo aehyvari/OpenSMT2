@@ -486,6 +486,9 @@ void BitBlasterConfig::bbUrem(PTRef rem_tr) {
     store.newBvector(result, rem_tr);
 }
 
+auto ls_read = [](int s, int i, std::vector<vec<PTRef>> const & table) { return table[s+1][i]; };
+auto ls_write = [](int s, int i, PTRef tr, std::vector<vec<PTRef>> & table) { table[s+1][i] = tr; };
+
 void BitBlasterConfig::bbShl(PTRef shl_tr) {
     Pterm const & shl = logic.getPterm(shl_tr);
     // Allocate new result
@@ -513,8 +516,6 @@ void BitBlasterConfig::bbShl(PTRef shl_tr) {
         }
     }
 
-    auto ls_read = [](int s, int i, std::vector<vec<PTRef>> const & table) { return table[s+1][i]; };
-    auto ls_write = [](int s, int i, PTRef tr, std::vector<vec<PTRef>> & table) { table[s+1][i] = tr; };
 
     for (int i = 0; i < l; i++) {
         ls_write(-1, i, store[a][i], ls);
@@ -530,4 +531,48 @@ void BitBlasterConfig::bbShl(PTRef shl_tr) {
         }
     }
     store.newBvector(ls.back(), shl_tr);
+}
+
+void BitBlasterConfig::bbLshr(PTRef lshr_tr) {
+    bool arith = false;
+    Pterm const & lshr = logic.getPterm(lshr_tr);
+    // Allocate new result
+    vec<PTRef> result;
+
+    vec<PTRef> acc;
+
+    BVRef a = store[lshr[0]];
+    BVRef b = store[lshr[1]];
+
+    assert(store[a].size() == store[b].size());
+    auto size = store[a].size();
+    if (not opensmt::isPowOfTwo(size)) {
+        throw OsmtApiException("lshr not supported for non-power-of-two bit widths currently");
+    }
+
+    int l = size;
+    int n = opensmt::getLogFromPowOfTwo(size);
+
+    std::vector<vec<PTRef>> ls;
+    for (int s = -1; s <= n-1; s++) {
+        ls.emplace_back();
+        for (int i = 0; i < l; i++)
+            ls.back().push(PTRef_Undef);
+    }
+
+    for (int i = 0; i < l; i++)
+        ls_write(-1, i, store[a][i], ls);
+
+    PTRef fill = arith ? store[a].msb() : logic.getTerm_false();
+    for (int s = 0; s <= n-1; s++) {
+        for (int i = 0; i < l; i++) {
+            if (i + (1 << s) <= l-1) {// i + 2^s <= l-1
+                ls_write(s, i, logic.mkIte(store[b][s], ls_read(s - 1, i + (1 << s), ls), ls_read(s - 1, i, ls)), ls);
+            } else {
+                ls_write(s, i, logic.mkIte(store[b][s], fill, ls_read(s - 1, i, ls)), ls);
+            }
+        }
+    }
+
+    store.newBvector(ls.back(), lshr_tr);
 }
