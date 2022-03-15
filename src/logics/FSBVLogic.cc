@@ -249,7 +249,9 @@ PTRef FSBVLogic::mkBVUrem(PTRef a1, PTRef a2) {
     if (not typeCheck(BVUrem, {a1, a2}, why)) {
         throw OsmtApiException(why);
     }
-    return mkFun(BVUrem, {a1, a2});
+    PTRef rem = mkFun(BVUrem, {a1, a2});
+    auto bitWidth = getRetSortBitWidth(a1);
+    return mkIte(mkEq(a2, mkBVConst(bitWidth, 0)), a1, rem);
 }
 
 SymRef FSBVLogic::mkBVShlSym(SRef sr) {
