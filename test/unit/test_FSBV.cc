@@ -232,6 +232,12 @@ TEST_F(FSBVTest, test_mkLSHR) {
     PTRef lshr = logic.mkBVLshr(a, b);
     ASSERT_NE(lshr, PTRef_Undef);
     std::cout << logic.pp(lshr) << std::endl;
+
+    PTRef c1 = logic.mkBVConst(8, 4);
+    PTRef c2 = logic.mkBVConst(8, 2);
+    lshr = logic.mkBVLshr(c1, c2);
+    PTRef eq = logic.mkEq(lshr, logic.mkBVConst(8, 1));
+    ASSERT_EQ(BitBlasterRewriter(logic).rewrite(eq), logic.getTerm_true());
 }
 
 TEST_F(FSBVTest, test_mkULT) {
