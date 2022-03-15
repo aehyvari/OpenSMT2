@@ -100,6 +100,12 @@ TEST_F(FSBVTest, test_mkNeg) {
     PTRef neg_a = logic.mkBVNeg(a);
     ASSERT_NE(a, PTRef_Undef);
     std::cout << logic.pp(neg_a) << std::endl;
+    PTRef c = logic.mkBVConst(16, 1);
+    PTRef neg_c = logic.mkBVNeg(c);
+    PTRef eq = logic.mkEq(neg_c, logic.mkBVConst(16, 65535));
+    std::cout << logic.pp(eq) << std::endl;
+    BitBlasterRewriter bitBlasterRewriter(logic);
+    ASSERT_EQ(logic.getTerm_true(), bitBlasterRewriter.rewrite(eq));
 }
 
 TEST_F(FSBVTest, test_mkNot) {
