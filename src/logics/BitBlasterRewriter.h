@@ -1,6 +1,9 @@
-//
-// Created by prova on 09.03.22.
-//
+/*
+ * Copyright (c) 2008 - 2012, Roberto Bruttomesso
+ * Copyright (c) 2012 - 2022, Antti Hyvarinen <antti.hyvarinen@gmail.com>
+ *
+ * SPDX-License-Identifier: MIT
+ */
 
 #ifndef OPENSMT_BITBLASTERREWRITER_H
 #define OPENSMT_BITBLASTERREWRITER_H
