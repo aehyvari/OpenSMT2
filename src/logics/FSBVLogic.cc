@@ -231,7 +231,9 @@ PTRef FSBVLogic::mkBVUdiv(PTRef a1, PTRef a2) {
     if (not typeCheck(BVUdiv, {a1, a2}, why)) {
         throw OsmtApiException(why);
     }
-    return mkFun(BVUdiv, {a1, a2});
+    PTRef divFun = mkFun(BVUdiv, {a1, a2});
+    auto bitWidth = getRetSortBitWidth(a1);
+    return mkIte(mkEq(a2, mkBVConst(bitWidth, 0)), mkBVConst(bitWidth, 1), divFun);
 }
 
 SymRef FSBVLogic::mkBVUremSym(SRef sr) {

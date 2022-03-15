@@ -263,3 +263,112 @@ void BitBlasterConfig::bbOr(PTRef and_tr) {
     }
     store.newBvector(result, and_tr);
 }
+
+void BitBlasterConfig::bbUdiv(PTRef div_tr) {
+    Pterm const & div = logic.getPterm(div_tr);
+    BVRef dividend = store[div[0]];
+    BVRef divisor = store[div[1]];
+    assert(store[divisor].size() == store[dividend].size());
+
+    auto size = store[divisor].size();
+    vec<PTRef> result;
+    result.growTo(size);
+
+    vec<PTRef> minuend;
+    minuend.capacity(size);
+
+    // Initialize minuend as 0..0 q[n-1]
+    minuend.push(store[dividend][size - 1]);
+    for (int i = 1; i < size; i ++) {
+        minuend.push(logic.getTerm_false());
+    }
+
+    // Main loop
+    for (int i = size - 1; i >= 0; i --) {
+        // Compute result[ i ] = !(minuend < divisor);
+        PTRef lt_prev = PTRef_Undef;
+        for (int j = 0; j < size; j ++) {
+            // Produce ~l[j] & r[j]
+            PTRef not_l = logic.mkNot(minuend[j]);
+            PTRef lt_this = logic.mkAnd(not_l, store[divisor][j]);
+            // Produce l[j] <-> r[j]
+            PTRef eq_this = logic.mkEq(minuend[j], store[divisor][j]);
+            if (lt_prev != PTRef_Undef) {
+                lt_prev = logic.mkOr(lt_this, logic.mkAnd(eq_this, lt_prev));
+            } else {
+                lt_prev = lt_this;
+            }
+        }
+
+        assert( lt_prev != PTRef_Undef);
+
+        result[i] = logic.mkNot(lt_prev);
+        PTRef bit_i = result[i];
+
+        // Construct subtrahend
+        vec<PTRef> subtrahend;
+        subtrahend.capacity(size);
+        for (int j = 0; j < size; j ++) {
+            subtrahend.push(logic.mkAnd(bit_i, store[divisor][j]));
+        }
+
+        // Subtract and store in minuend
+        PTRef carry = PTRef_Undef;
+        for (int j = 0; j < minuend.size(); j++) {
+            PTRef bit_1 = minuend[j];
+            PTRef bit_2 = subtrahend[j];
+
+            PTRef bit_2_neg = logic.mkNot(bit_2);
+            PTRef xor_1 = logic.mkXor(bit_1, bit_2_neg);
+            PTRef and_1 = logic.mkAnd(bit_1, bit_2_neg);
+
+            if (carry != PTRef_Undef) {
+                PTRef xor_2 = logic.mkXor(xor_1, carry);
+                PTRef and_2 = logic.mkAnd(xor_1, carry);
+                carry = logic.mkOr(and_1, and_2);
+                minuend[j] = xor_2;
+            } else {
+                carry = and_1;
+                minuend[j] = xor_1;
+            }
+        }
+
+        carry = PTRef_Undef;
+
+        // Adds one, if bit_i is one
+        for (int j = 0; j < minuend.size(); j++) {
+            PTRef bit_1 = minuend[j];
+            PTRef bit_2 = j == 0 ? logic.getTerm_true() : logic.getTerm_false();
+
+            PTRef xor_1 = logic.mkXor(bit_1, bit_2);
+            PTRef and_1 = logic.mkAnd(bit_1, bit_2);
+
+            if (carry != PTRef_Undef) {
+                PTRef xor_2 = logic.mkXor(xor_1, carry);
+                PTRef and_2 = logic.mkAnd(xor_1, carry);
+                carry = logic.mkOr(and_1, and_2);
+                minuend[j] = xor_2;
+            } else {
+                carry = and_1;
+                minuend[j] = xor_1;
+            }
+        }
+
+        if (i > 0) {
+            // Prepare new minuend
+            //
+            //                M[i-1]
+            //
+            // O[2] O[1] O[0]
+            //      N[2] N[1] N[0]
+            //
+            for (int j = size - 1 ; j >= 1 ; j --) {
+                minuend[j] = minuend[j - 1];
+            }
+            minuend[0] = store[dividend][i - 1];
+        }
+    }
+
+    // Save result and return
+    store.newBvector(result, div_tr);
+}
