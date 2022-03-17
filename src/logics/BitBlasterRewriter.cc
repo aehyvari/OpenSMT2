@@ -221,3 +221,17 @@ void BitBlasterConfig::bbFlip(PTRef flip_tr) {
     // Save result and return
     store.newBvector(result, flip_tr);
 }
+
+void BitBlasterConfig::bbNot(PTRef not_tr) {
+    BVRef a = store[logic.getPterm(not_tr)[0]];
+    auto size = store[a].size();
+    vec<PTRef> result;
+    result.growTo(size, logic.getTerm_false());
+    vec<PTRef> args;
+    for (PTRef tr : store[a]) {
+        args.push(tr);
+    }
+    result[0] = logic.mkNot(logic.mkOr(args));
+    // Save result and return
+    store.newBvector(result, not_tr);
+}

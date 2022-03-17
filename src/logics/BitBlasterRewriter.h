@@ -24,11 +24,11 @@ class BitBlasterConfig : public DefaultRewriterConfig {
     void bbVar(PTRef var_tr);
     void bbAdd(PTRef add_tr);
     void bbConcat(PTRef tr);
+    void bbNot(PTRef tr);
     void bbFlip(PTRef tr);
 
     void notImplemented(PTRef tr) { throw OsmtInternalException(std::string("Not implemented: ") + logic.getSymName(tr)); }
 
-    void bbNot(PTRef tr) { notImplemented(tr); }
     void bbNeg(PTRef tr) { notImplemented(tr); }
     void bbAnd(PTRef tr) { notImplemented(tr); }
     void bbOr(PTRef tr) { notImplemented(tr); }
