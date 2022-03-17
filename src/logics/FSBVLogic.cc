@@ -13,7 +13,16 @@ FSBVLogic::FSBVLogic(opensmt::Logic_t type)
     , BVBaseSort(sort_store.getOrCreateSort(sym_BVBaseSort, {}).first)
 { }
 
-SRef FSBVLogic::makeBitWidthSortForBW(BitWidth_t m) {
+SRef FSBVLogic::getIndexedSort(SRef indexedSort, std::string const & idx) {
+    if (BVBaseSort == indexedSort) {
+        assert(opensmt::isNumber(idx));
+        return makeBitVectorSortForBW(std::stoi(idx));
+    } else {
+        return Logic::getIndexedSort(indexedSort, idx);
+    }
+}
+
+opensmt::pair<SRef, bool> FSBVLogic::makeBitWidthSortForBW(BitWidth_t m) {
 
     std::string const bw_string = std::to_string(m);
     SSymRef bwSortSym;
@@ -22,15 +31,16 @@ SRef FSBVLogic::makeBitWidthSortForBW(BitWidth_t m) {
         bwSortSym = sort_store.newSortSymbol(SortSymbol(bw_string, 0, SortSymbol::INTERNAL));
     }
     // Do not create core predicates for bit width sorts
-    SRef bwSort = sort_store.getOrCreateSort(bwSortSym, {}).first;
-
-    return bwSort;
+    return sort_store.getOrCreateSort(bwSortSym, {});
 }
 
 SRef FSBVLogic::makeBitVectorSortForBW(BitWidth_t m) {
-    SRef bwSort = makeBitWidthSortForBW(m);
+    auto [bwSort, isNew] = makeBitWidthSortForBW(m);
     // Create core predicates for bit vector sorts
     SRef bvSort = getSort(sym_IndexedSort, {BVBaseSort, bwSort});
+    if (isNew) {
+        defaultValueForSort.insert(bvSort, mkBVConst(m, 0));
+    }
     return bvSort;
 }
 
