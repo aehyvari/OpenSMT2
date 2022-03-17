@@ -115,6 +115,19 @@ TEST_F(FSBVTest, test_mkNot) {
     ASSERT_EQ(bitBlasterRewriter.rewrite(eq), logic.getTerm_true());
 }
 
+TEST_F(FSBVTest, test_mkFlip) {
+    PTRef a = logic.mkBVVar(16, "a");
+    PTRef not_a = logic.mkBVNot(a);
+    ASSERT_NE(a, PTRef_Undef);
+    std::cout << logic.pp(not_a) << std::endl;
+    PTRef c = logic.mkBVConst(4, 0);
+    PTRef not_c = logic.mkBVFlip(c);
+    PTRef eq = logic.mkEq(not_c, logic.mkBVConst(4, 15));
+    std::cout << logic.pp(eq) << std::endl;
+    BitBlasterRewriter bitBlasterRewriter(logic);
+    ASSERT_EQ(bitBlasterRewriter.rewrite(eq), logic.getTerm_true());
+}
+
 TEST_F(FSBVTest, test_mkAnd) {
     PTRef a = logic.mkBVVar(16, "a");
     PTRef b = logic.mkBVVar(16, "b");
