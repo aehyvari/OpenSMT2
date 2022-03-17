@@ -109,8 +109,19 @@ SymRef FSBVLogic::mkBVNegSym(SRef sr) {
 }
 
 PTRef FSBVLogic::mkBVNeg(PTRef a) {
-    SymRef BVNeg = mkBVNegSym(getSortRef(a));
-    return mkFun(BVNeg, {a});
+    return mkBVAdd(mkBVFlip(a), mkBVConst(getRetSortBitWidth(a), 1));
+}
+
+SymRef FSBVLogic::mkBVFlipSym(SRef sr) {
+    if (not isBitVectorSort(sr)) {
+        throw OsmtApiException("mkBVFlip called for unrelated sort " + printSort(sr));
+    }
+    return declareFun_NoScoping(tk_bvflip, sr, {sr});
+}
+
+PTRef FSBVLogic::mkBVFlip(PTRef a) {
+    SymRef BVFlip = mkBVFlipSym(getSortRef(a));
+    return mkFun(BVFlip, {a});
 }
 
 SymRef FSBVLogic::mkBVNotSym(SRef sr) {

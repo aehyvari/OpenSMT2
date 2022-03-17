@@ -20,6 +20,7 @@ class FSBVLogic : public Logic {
     static constexpr const char *tk_bvconcat = "concat";
     static constexpr const char *tk_bvbasesort = "BitVec";
     static constexpr const char *tk_bvnot = "bvnot";
+    static constexpr const char *tk_bvflip = "bvflip";
     static constexpr const char *tk_bvneg = "bvneg";
     static constexpr const char *tk_bvand = "bvand";
     static constexpr const char *tk_bvor = "bvor";
@@ -57,6 +58,7 @@ class FSBVLogic : public Logic {
     SymRef mkBVConcatSym(SRef lhs, SRef rhs);
     SymRef mkBVNegSym(SRef a);
     SymRef mkBVNotSym(SRef a);
+    SymRef mkBVFlipSym(SRef a);
     SymRef mkBVAndSym(SRef a);
     SymRef mkBVOrSym(SRef a);
     SymRef mkBVAddSym(SRef a);
@@ -92,6 +94,7 @@ public:
 
     PTRef mkBVNeg(PTRef a);
     PTRef mkBVNot(PTRef a);
+    PTRef mkBVFlip(PTRef a);
 
     PTRef mkBVAnd(vec<PTRef> const & args);
     PTRef mkBVAnd(PTRef a1, PTRef a2);
@@ -116,6 +119,7 @@ public:
     bool isEqualAsString(char const * x, char const * y) const { return std::string(x) == y; }
     bool isBVConcat(SymRef sr) const { return isEqualAsString(tk_bvconcat, getSymName(sr)); }
     bool isBVNeg(SymRef sr) const { return isEqualAsString(tk_bvneg, getSymName(sr)); }
+    bool isBVFlip(SymRef sr) const { return isEqualAsString(tk_bvflip, getSymName(sr)); }
     bool isBVNot(SymRef sr) const { return isEqualAsString(tk_bvnot, getSymName(sr)); }
     bool isBVAnd(SymRef sr) const { return isEqualAsString(tk_bvand, getSymName(sr)); }
     bool isBVOr(SymRef sr) const { return isEqualAsString(tk_bvor, getSymName(sr)); }

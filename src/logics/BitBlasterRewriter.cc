@@ -209,3 +209,15 @@ void BitBlasterConfig::bbConcat(PTRef concat_tr) {
     // Save result and return
     store.newBvector(result, concat_tr);
 }
+
+void BitBlasterConfig::bbFlip(PTRef flip_tr) {
+    BVRef a = store[logic.getPterm(flip_tr)[0]];
+    auto size = store[a].size();
+    vec<PTRef> result;
+    result.capacity(size);
+    for (PTRef tr : store[a]) {
+        result.push(logic.mkNot(tr));
+    }
+    // Save result and return
+    store.newBvector(result, flip_tr);
+}
