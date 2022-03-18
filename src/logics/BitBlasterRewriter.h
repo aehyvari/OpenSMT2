@@ -94,8 +94,7 @@ public:
         std::unordered_map<PTRef, PTRef, PTRefHash> map;
         for (PTRef tr : store.getBitVectorTerms()) {
             BVRef br = store.getFromPTRef(tr);
-            for (int i = 0; i < store[br].size(); i++) {
-                PTRef bitBlastedTerm = store[br][i];
+            for (PTRef bitBlastedTerm : store[br]) {
                 map.insert({bitBlastedTerm, tr});
             }
         }
