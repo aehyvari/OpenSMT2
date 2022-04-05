@@ -328,7 +328,7 @@ CoreSMTSolver::handleUnsat()
         all_learnts ++;
 
         CRef cr = ca.alloc(learnt_clause, true);
-        ca[cr].glue = glue;
+        ca[cr].setglue(glue);
 
         if (logsProofForInterpolation()) {
             proof->endChain(cr);

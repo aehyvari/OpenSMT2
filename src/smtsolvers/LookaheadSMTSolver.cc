@@ -95,7 +95,7 @@ lbool LookaheadSMTSolver::laPropagateWrapper() {
                 uncheckedEnqueue(out_learnt[0]);
             } else {
                 CRef crd = ca.alloc(out_learnt, true);
-                ca[crd].glue = glue;
+                ca[crd].setglue(glue);
                 learnts.push(crd);
                 attachClause(crd);
                 uncheckedEnqueue(out_learnt[0], crd);

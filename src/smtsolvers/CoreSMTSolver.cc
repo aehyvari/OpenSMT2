@@ -611,7 +611,7 @@ uint32_t CoreSMTSolver::calc_glue(const vec<Lit>& ps)
         if (l != 0 && permDiff[l] != MYFLAG) {
             permDiff[l] = MYFLAG;
             nblevels++;
-            if (nblevels >= 1000) {
+            if (nblevels >= 10) {
                 return nblevels;
             }
         }
@@ -1217,7 +1217,8 @@ void CoreSMTSolver::reduceDB()
     for (i = j = 0; i < learnts.size(); i++)
     {
         Clause& c = ca[learnts[i]];
-        if (c.glue > 3 && c.size() > 2 && !locked(c) && (i < learnts.size() / 2 || c.activity() < extra_lim))
+//         std::cout << "c.glue: " << c.getglue() << std::endl;
+        if (c.getglue() > 3 && c.size() > 2 && !locked(c) && (i < learnts.size() / 2 || c.activity() < extra_lim))
             removeClause(learnts[i]);
         else
             learnts[j++] = learnts[i];
@@ -1430,7 +1431,7 @@ void CoreSMTSolver::learntSizeAdjust() {
   |________________________________________________________________________________________________@*/
 lbool CoreSMTSolver::search(int nof_conflicts, int nof_learnts)
 {
-    std::cout << "Starting search conflicts: " << conflicts << " will go: " << nof_conflicts << std::endl;
+//     std::cout << "Starting search conflicts: " << conflicts << " will go: " << nof_conflicts << std::endl;
     // Time my executionto search_timer
 //    opensmt::StopWatch stopwatch = opensmt::StopWatch(search_timer);
 #ifdef VERBOSE_SAT
@@ -1506,7 +1507,7 @@ lbool CoreSMTSolver::search(int nof_conflicts, int nof_learnts)
                 all_learnts ++;
 
                 CRef cr = ca.alloc(learnt_clause, true);
-                ca[cr].glue = glue;
+                ca[cr].setglue(glue);
 
                 if (logsProofForInterpolation()) {
                     proof->endChain(cr);

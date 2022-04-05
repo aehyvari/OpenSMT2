@@ -140,7 +140,8 @@ class Clause {
         unsigned learnt    : 1;
         unsigned has_extra : 1;
         unsigned reloced   : 1;
-        unsigned size      : 27; }                            header;
+        unsigned glue      : 4;
+        unsigned size      : 23; }                            header;
     union { Lit lit; float act; uint32_t abs; CRef rel; } data[0];
 
     friend class ClauseAllocator;
@@ -165,7 +166,6 @@ class Clause {
     }
 
 public:
-    uint32_t glue;
     void calcAbstraction() {
         assert(header.has_extra);
         uint32_t abstraction = 0;
@@ -198,6 +198,13 @@ public:
 
     Lit          subsumes    (const Clause& other) const;
     void         strengthen  (Lit p);
+    uint32_t     getglue() const {
+        return header.glue;
+    }
+    void         setglue(const uint32_t glue) {
+        assert(glue < 16);
+        header.glue = glue;
+    }
 };
 
 
