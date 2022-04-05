@@ -1217,7 +1217,6 @@ void CoreSMTSolver::reduceDB()
     for (i = j = 0; i < learnts.size(); i++)
     {
         Clause& c = ca[learnts[i]];
-        std::cout << "c.glue: " << c.glue << std::endl;
         if (c.glue > 3 && c.size() > 2 && !locked(c) && (i < learnts.size() / 2 || c.activity() < extra_lim))
             removeClause(learnts[i]);
         else
