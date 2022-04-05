@@ -154,6 +154,7 @@ class Clause {
         header.has_extra = use_extra;
         header.reloced   = 0;
         header.size      = ps.size();
+        header.glue = 15;
 
         for (unsigned i = 0; i < (unsigned)ps.size(); i++)
             data[i].lit = ps[i];

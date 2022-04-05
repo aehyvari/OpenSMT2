@@ -577,7 +577,7 @@ Lit CoreSMTSolver::choosePolarity(Var next) {
         }
     }
     sign = false;
-    sign = not saved_polar[next];
+    sign = not saved_polar[next] ^ myinv;
     return mkLit(next, sign);
 }
 
@@ -1214,14 +1214,19 @@ void CoreSMTSolver::reduceDB()
     sort(learnts, reduceDB_lt(ca));
     // Don't delete binary or locked clauses. From the rest, delete clauses from the first half
     // and clauses with activity smaller than 'extra_lim':
+    int extra = 0;
     for (i = j = 0; i < learnts.size(); i++)
     {
         Clause& c = ca[learnts[i]];
 //         std::cout << "c.glue: " << c.getglue() << std::endl;
-        if (c.getglue() > 3 && c.size() > 2 && !locked(c) && (i < learnts.size() / 2 || c.activity() < extra_lim))
+        if (c.getglue() <= 3) {
+            extra++;
+        }
+        if (c.getglue() > 3 && c.size() > 2 && !locked(c) && (i+extra < learnts.size() / 2)) {
             removeClause(learnts[i]);
-        else
+        }else{
             learnts[j++] = learnts[i];
+        }
     }
     learnts.shrink(i - j);
     checkGarbage();
@@ -1429,9 +1434,8 @@ void CoreSMTSolver::learntSizeAdjust() {
   |    all variables are decision variables, this means that the clause set is satisfiable. 'l_False'
   |    if the clause set is unsatisfiable. 'l_Undef' if the bound on number of conflicts is reached.
   |________________________________________________________________________________________________@*/
-lbool CoreSMTSolver::search(int nof_conflicts, int nof_learnts)
+lbool CoreSMTSolver::search(int nof_conflicts)
 {
-//     std::cout << "Starting search conflicts: " << conflicts << " will go: " << nof_conflicts << std::endl;
     // Time my executionto search_timer
 //    opensmt::StopWatch stopwatch = opensmt::StopWatch(search_timer);
 #ifdef VERBOSE_SAT
@@ -1479,6 +1483,15 @@ lbool CoreSMTSolver::search(int nof_conflicts, int nof_learnts)
 
         CRef confl = propagate();
         if (confl != CRef_Undef) {
+
+            if (conflicts > longest_flip) {
+                longest_flip+=10000;
+                myinv ^= 1;
+                if (myinv == 0) {
+//                     longest_trail = 0;
+                }
+            }
+
             // CONFLICT
             conflicts++;
             conflictC++;
@@ -1497,6 +1510,7 @@ lbool CoreSMTSolver::search(int nof_conflicts, int nof_learnts)
                 CRef reason = CRef_Undef;
                 if (logsProofForInterpolation()) {
                     CRef cr = ca.alloc(learnt_clause, false);
+                    ca[cr].setglue(glue);
                     proof->endChain(cr);
                     reason = cr;
                 }
@@ -1538,9 +1552,10 @@ lbool CoreSMTSolver::search(int nof_conflicts, int nof_learnts)
             // Two ways of reducing the clause.  The latter one seems to be working
             // better (not running proper tests since the cluster is down...)
             // if ((learnts.size()-nAssigns()) >= max_learnts)
-            if (nof_learnts >= 0 && learnts.size()-nAssigns() >= nof_learnts) {
+            if (nof_learnts >= 0 && learnts.size() >= nof_learnts) {
                 // Reduce the set of learnt clauses:
                 reduceDB();
+                nof_learnts *= 1.1;
             }
 
             // Early Pruning Call
@@ -1755,7 +1770,7 @@ lbool CoreSMTSolver::solve_()
     solves++;
 
     double  nof_conflicts     = restart_first;
-    double  nof_learnts       = nClauses() * learntsize_factor;
+    //double  nof_learnts       = nClauses() * learntsize_factor;
     max_learnts               = nClauses() * learntsize_factor;
     learntsize_adjust_confl   = learntsize_adjust_start_confl;
     learntsize_adjust_cnt     = (int)learntsize_adjust_confl;
@@ -1795,15 +1810,15 @@ lbool CoreSMTSolver::solve_()
         }
 
         // XXX
-        status = search((int)nof_conflicts, (int)nof_learnts);
+        status = search((int)nof_conflicts);
         nof_conflicts = restartNextLimit(nof_conflicts);
         if (config.sat_use_luby_restart) {
             if (last_luby_k != luby_k) {
-                nof_learnts *= 1.215;
+//                 nof_learnts *= learntsize_inc;//1.215;
             }
             last_luby_k = luby_k;
         } else {
-            nof_learnts *= learntsize_inc;
+//             nof_learnts *= learntsize_inc;
         }
     }
 
@@ -1914,7 +1929,7 @@ int CoreSMTSolver::restartNextLimit ( int nof_conflicts )
         else
             luby_previous.push_back( luby_previous[luby_i - (1 << (luby_k - 1))]);
 
-        return luby_previous.back() * restart_first;
+        return luby_previous.back() * 120;
     }
     // Standard restart
     return nof_conflicts * restart_inc;
