@@ -1203,10 +1203,6 @@ struct reduceDB_lt
     reduceDB_lt(ClauseAllocator& ca_) : ca(ca_) {}
     bool operator () (CRef x, CRef y)
     {
-        if (ca[x].glue <= 3 &&  ca[x].glue > 3) return true;
-        if (ca[x].glue > 3 &&  ca[x].glue <= 3) return false;
-        if (ca[x].glue <= 3 &&  ca[x].glue <= 3) return false;
-
         return ca[x].size() > 2 && (ca[y].size() == 2 || ca[x].activity() < ca[y].activity());
     }
 };
@@ -1221,7 +1217,8 @@ void CoreSMTSolver::reduceDB()
     for (i = j = 0; i < learnts.size(); i++)
     {
         Clause& c = ca[learnts[i]];
-        if (c.size() > 2 && !locked(c) && (i < learnts.size() / 2 || c.activity() < extra_lim))
+        std::cout << "c.glue: " << c.glue << std::endl;
+        if (c.glue > 3 && c.size() > 2 && !locked(c) && (i < learnts.size() / 2 || c.activity() < extra_lim))
             removeClause(learnts[i]);
         else
             learnts[j++] = learnts[i];
