@@ -229,6 +229,7 @@ Var CoreSMTSolver::newVar(bool sign, bool dvar)
     watches  .init(mkLit(v, true));
     assigns  .push(l_Undef);
     vardata  .push(mkVarData(CRef_Undef, 0));
+    permDiff.push(0);
     activity .push(rnd_init_act ? drand(random_seed) * 0.00001 : 0);
     seen     .push(0);
     polarity .push(sign);
@@ -575,23 +576,8 @@ Lit CoreSMTSolver::choosePolarity(Var next) {
             return mkLit(next, sign);
         }
     }
-    switch ( polarity_mode ) {
-        case polarity_true:
-//            sign = false;
-            sign = saved_polar[next];
-            break;
-        case polarity_false:
-            sign = true;
-            break;
-        case polarity_user:
-            sign = polarity[next];
-            break;
-        case polarity_rnd:
-            sign = irand(random_seed, 2);
-            break;
-        default:
-            assert(false);
-    }
+    sign = false;
+    sign = not saved_polar[next];
     return mkLit(next, sign);
 }
 
@@ -616,6 +602,23 @@ Lit CoreSMTSolver::pickBranchLit()
 
 }
 
+uint32_t CoreSMTSolver::calc_glue(const vec<Lit>& ps)
+{
+    MYFLAG++;
+    uint32_t nblevels = 0;
+    for (Lit lit: ps) {
+        int l = vardata[var(lit)].level;
+        if (l != 0 && permDiff[l] != MYFLAG) {
+            permDiff[l] = MYFLAG;
+            nblevels++;
+            if (nblevels >= 1000) {
+                return nblevels;
+            }
+        }
+    }
+    return nblevels;
+}
+
 /*_________________________________________________________________________________________________
   |
   |  analyze : (confl : CRef) (out_learnt : vec<Lit>&) (out_btlevel : int&)  ->  [void]
@@ -634,7 +637,7 @@ Lit CoreSMTSolver::pickBranchLit()
   |    Will undo part of the trail, upto but not beyond the assumption of the current decision level.
   |________________________________________________________________________________________________@*/
 
-void CoreSMTSolver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
+void CoreSMTSolver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel, uint32_t& out_glue)
 {
     bool logsProofForInterpolation = this->logsProofForInterpolation();
     assert(!logsProofForInterpolation || !proof->hasOpenChain());
@@ -821,6 +824,7 @@ void CoreSMTSolver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
     max_literals += out_learnt.size();
     out_learnt.shrink(i - j);
     tot_literals += out_learnt.size();
+    out_glue = calc_glue(out_learnt);
 
     // Find correct backtrack level:
     //
@@ -1199,6 +1203,10 @@ struct reduceDB_lt
     reduceDB_lt(ClauseAllocator& ca_) : ca(ca_) {}
     bool operator () (CRef x, CRef y)
     {
+        if (ca[x].glue <= 3 &&  ca[x].glue > 3) return true;
+        if (ca[x].glue > 3 &&  ca[x].glue <= 3) return false;
+        if (ca[x].glue <= 3 &&  ca[x].glue <= 3) return false;
+
         return ca[x].size() > 2 && (ca[y].size() == 2 || ca[x].activity() < ca[y].activity());
     }
 };
@@ -1426,6 +1434,7 @@ void CoreSMTSolver::learntSizeAdjust() {
   |________________________________________________________________________________________________@*/
 lbool CoreSMTSolver::search(int nof_conflicts, int nof_learnts)
 {
+    std::cout << "Starting search conflicts: " << conflicts << " will go: " << nof_conflicts << std::endl;
     // Time my executionto search_timer
 //    opensmt::StopWatch stopwatch = opensmt::StopWatch(search_timer);
 #ifdef VERBOSE_SAT
@@ -1480,7 +1489,8 @@ lbool CoreSMTSolver::search(int nof_conflicts, int nof_learnts)
                 return zeroLevelConflictHandler();
             }
             learnt_clause.clear();
-            analyze(confl, learnt_clause, backtrack_level);
+            uint32_t glue;
+            analyze(confl, learnt_clause, backtrack_level, glue);
 
             cancelUntil(backtrack_level);
 
@@ -1500,6 +1510,7 @@ lbool CoreSMTSolver::search(int nof_conflicts, int nof_learnts)
                 all_learnts ++;
 
                 CRef cr = ca.alloc(learnt_clause, true);
+                ca[cr].glue = glue;
 
                 if (logsProofForInterpolation()) {
                     proof->endChain(cr);

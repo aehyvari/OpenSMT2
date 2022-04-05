@@ -554,7 +554,7 @@ SMTConfig::initializeConfig( )
   sat_polarity_mode             = 0;
   sat_initial_skip_step         = 1;
   sat_skip_step_factor          = 1;
-  sat_use_luby_restart          = 0;
+  sat_use_luby_restart          = 1;
   sat_learn_up_to_size          = 0;
   sat_temporary_learn           = 1;
   sat_preprocess_booleans       = 1;

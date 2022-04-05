@@ -165,6 +165,7 @@ class Clause {
     }
 
 public:
+    uint32_t glue;
     void calcAbstraction() {
         assert(header.has_extra);
         uint32_t abstraction = 0;

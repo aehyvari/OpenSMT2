@@ -299,7 +299,8 @@ CoreSMTSolver::handleUnsat()
     if (logsProofForInterpolation()) {
         proof->newTheoryClause(confl);
     }
-    analyze( confl, learnt_clause, backtrack_level );
+    uint32_t glue;
+    analyze( confl, learnt_clause, backtrack_level, glue);
 
     if (!logsProofForInterpolation()) {
         // Get rid of the temporary lemma
@@ -327,6 +328,7 @@ CoreSMTSolver::handleUnsat()
         all_learnts ++;
 
         CRef cr = ca.alloc(learnt_clause, true);
+        ca[cr].glue = glue;
 
         if (logsProofForInterpolation()) {
             proof->endChain(cr);
