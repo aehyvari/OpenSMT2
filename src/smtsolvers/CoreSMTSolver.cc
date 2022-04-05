@@ -1485,8 +1485,13 @@ lbool CoreSMTSolver::search(int nof_conflicts)
         if (confl != CRef_Undef) {
 
             if (conflicts > longest_flip) {
-                longest_flip+=10000;
                 myinv ^= 1;
+                if (myinv == 1) {
+                    longest_flip+=1000;
+                } else {
+                    longest_flip+=10000;
+                }
+
                 if (myinv == 0) {
 //                     longest_trail = 0;
                 }
