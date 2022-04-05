@@ -409,7 +409,7 @@ void CoreSMTSolver::cancelUntil(int level)
     {
         if (trail.size() > longest_trail) {
             for (auto p : trail) {
-                saved_polar[var(p)] = not sign(p);
+                saved_polar[var(p)] = sign(p);
             }
             longest_trail = trail.size();
         }
