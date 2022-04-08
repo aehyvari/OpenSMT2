@@ -229,6 +229,7 @@ Var CoreSMTSolver::newVar(bool sign, bool dvar)
     watches  .init(mkLit(v, true));
     assigns  .push(l_Undef);
     vardata  .push(mkVarData(CRef_Undef, 0));
+    permDiff.push(0);
     activity .push(rnd_init_act ? drand(random_seed) * 0.00001 : 0);
     seen     .push(0);
     polarity .push(sign);
@@ -608,6 +609,23 @@ Lit CoreSMTSolver::pickBranchLit()
 
 }
 
+uint32_t CoreSMTSolver::calc_glue(const vec<Lit>& ps)
+{
+    MYFLAG++;
+    uint32_t nblevels = 0;
+    for (Lit lit: ps) {
+        int l = vardata[var(lit)].level;
+        if (l != 0 && permDiff[l] != MYFLAG) {
+            permDiff[l] = MYFLAG;
+            nblevels++;
+            if (nblevels >= 10) {
+                return nblevels;
+            }
+        }
+    }
+    return nblevels;
+}
+
 /*_________________________________________________________________________________________________
   |
   |  analyze : (confl : CRef) (out_learnt : vec<Lit>&) (out_btlevel : int&)  ->  [void]
@@ -626,7 +644,7 @@ Lit CoreSMTSolver::pickBranchLit()
   |    Will undo part of the trail, upto but not beyond the assumption of the current decision level.
   |________________________________________________________________________________________________@*/
 
-void CoreSMTSolver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
+void CoreSMTSolver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel, uint32_t& out_glue)
 {
     bool logsProofForInterpolation = this->logsProofForInterpolation();
     assert(!logsProofForInterpolation || !proof->hasOpenChain());
@@ -813,6 +831,7 @@ void CoreSMTSolver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
     max_literals += out_learnt.size();
     out_learnt.shrink(i - j);
     tot_literals += out_learnt.size();
+    out_glue = calc_glue(out_learnt);
 
     // Find correct backtrack level:
     //
@@ -1197,18 +1216,23 @@ struct reduceDB_lt
 void CoreSMTSolver::reduceDB()
 {
     int     i, j;
-    double  extra_lim = cla_inc / learnts.size();    // Remove any clause below this activity
 
     sort(learnts, reduceDB_lt(ca));
     // Don't delete binary or locked clauses. From the rest, delete clauses from the first half
     // and clauses with activity smaller than 'extra_lim':
+    int extra = 0;
     for (i = j = 0; i < learnts.size(); i++)
     {
         Clause& c = ca[learnts[i]];
-        if (c.size() > 2 && !locked(c) && (i < learnts.size() / 2 || c.activity() < extra_lim))
+//         std::cout << "c.glue: " << c.getglue() << std::endl;
+        if (c.getglue() <= 3) {
+            extra++;
+        }
+        if (c.getglue() > 3 && c.size() > 2 && !locked(c) && (i+extra < learnts.size() / 2)) {
             removeClause(learnts[i]);
-        else
+        }else{
             learnts[j++] = learnts[i];
+        }
     }
     learnts.shrink(i - j);
     checkGarbage();
@@ -1472,7 +1496,8 @@ lbool CoreSMTSolver::search(int nof_conflicts, int nof_learnts)
                 return zeroLevelConflictHandler();
             }
             learnt_clause.clear();
-            analyze(confl, learnt_clause, backtrack_level);
+            uint32_t glue;
+            analyze(confl, learnt_clause, backtrack_level, glue);
 
             cancelUntil(backtrack_level);
 
@@ -1482,6 +1507,7 @@ lbool CoreSMTSolver::search(int nof_conflicts, int nof_learnts)
                 CRef reason = CRef_Undef;
                 if (logsProofForInterpolation()) {
                     CRef cr = ca.alloc(learnt_clause, false);
+                    ca[cr].setglue(glue);
                     proof->endChain(cr);
                     reason = cr;
                 }
@@ -1492,6 +1518,7 @@ lbool CoreSMTSolver::search(int nof_conflicts, int nof_learnts)
                 all_learnts ++;
 
                 CRef cr = ca.alloc(learnt_clause, true);
+                ca[cr].setglue(glue);
 
                 if (logsProofForInterpolation()) {
                     proof->endChain(cr);
