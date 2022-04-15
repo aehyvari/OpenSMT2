@@ -5,16 +5,18 @@
 #include <gtest/gtest.h>
 #include <Logic.h>
 #include <Substitutor.h>
+#include "SubstitutionSimplifier.h"
 
 class GetFactsTest : public ::testing::Test {
 protected:
-    GetFactsTest(): logic{opensmt::Logic_t::QF_UF} {}
+    GetFactsTest(): logic{opensmt::Logic_t::QF_UF}, substitutionSimplifier(logic) {}
     virtual void SetUp() {
         ufsort = logic.declareUninterpretedSort("U");
         x = logic.mkVar(ufsort, "x");
         y = logic.mkVar(ufsort, "y");
     }
     Logic logic;
+    SubstitutionSimplifier substitutionSimplifier;
     SRef ufsort;
     PTRef x;
     PTRef y;
@@ -24,8 +26,7 @@ protected:
 
 TEST_F(GetFactsTest, test_UnitFact){
     PTRef eq = logic.mkEq(x,y);
-    MapWithKeys<PTRef,lbool,PTRefHash> newFacts;
-    logic.getNewFacts(eq, newFacts);
+    auto [ok, newFacts] = substitutionSimplifier.getNewFacts(eq);
     ASSERT_TRUE(newFacts.has(eq));
     EXPECT_EQ(newFacts[eq], l_True);
 }
@@ -33,9 +34,8 @@ TEST_F(GetFactsTest, test_UnitFact){
 TEST_F(GetFactsTest, test_NegatedUnitFact){
     PTRef eq = logic.mkEq(x,y);
     PTRef neq = logic.mkNot(eq);
-    MapWithKeys<PTRef,lbool,PTRefHash> newFacts;
     // MB: Currently it does not learn inequalities. Should it?
-    logic.getNewFacts(neq, newFacts);
+    auto [ok, newFacts] = substitutionSimplifier.getNewFacts(neq);
 //    ASSERT_TRUE(newFacts.has(neq));
 //    EXPECT_EQ(newFacts[eq], l_True);
 }
@@ -43,8 +43,7 @@ TEST_F(GetFactsTest, test_NegatedUnitFact){
 TEST_F(GetFactsTest, test_NegatedBoolLiteral){
     PTRef var = logic.mkBoolVar("a");
     PTRef neq = logic.mkNot(var);
-    MapWithKeys<PTRef,lbool,PTRefHash> newFacts;
-    logic.getNewFacts(neq, newFacts);
+    auto [ok, newFacts] = substitutionSimplifier.getNewFacts(neq);
     ASSERT_TRUE(newFacts.has(var));
     EXPECT_EQ(newFacts[var], l_False);
 }
@@ -55,8 +54,7 @@ TEST_F(GetFactsTest, test_MultipleFacts){
     PTRef eq = logic.mkEq(x,y);
     PTRef neq = logic.mkNot(eq);
     PTRef conj = logic.mkAnd(a, logic.mkNot(logic.mkOr(b, neq)));
-    MapWithKeys<PTRef,lbool,PTRefHash> newFacts;
-    logic.getNewFacts(conj, newFacts);
+    auto [ok, newFacts] = substitutionSimplifier.getNewFacts(conj);
     ASSERT_TRUE(newFacts.has(a));
     ASSERT_TRUE(newFacts.has(b));
     ASSERT_TRUE(newFacts.has(eq));
@@ -70,7 +68,7 @@ TEST_F(GetFactsTest, test_MultipleFacts){
 
 class RetrieveSubstitutionTest : public ::testing::Test {
 protected:
-    RetrieveSubstitutionTest(): logic{opensmt::Logic_t::QF_UF} {}
+    RetrieveSubstitutionTest(): logic{opensmt::Logic_t::QF_UF}, substitutionSimplifier(logic) {}
     virtual void SetUp() {
         ufsort = logic.declareUninterpretedSort("U");
         x = logic.mkVar(ufsort, "x");
@@ -80,6 +78,7 @@ protected:
         f = logic.declareFun("f", ufsort, {ufsort});
     }
     Logic logic;
+    SubstitutionSimplifier substitutionSimplifier;
     SRef ufsort;
     PTRef x;
     PTRef y;
@@ -92,7 +91,7 @@ TEST_F(RetrieveSubstitutionTest, test_VarVarSubstituition) {
     PTRef eq = logic.mkEq(x,y);
     vec<PtAsgn> facts;
     facts.push(PtAsgn{eq, l_True});
-    auto subst = logic.retrieveSubstitutions(facts);
+    auto subst = substitutionSimplifier.retrieveSubstitutions(facts);
     ASSERT_TRUE(subst.second.has(x));
     EXPECT_EQ(subst.second[x], y);
 }
@@ -101,7 +100,7 @@ TEST_F(RetrieveSubstitutionTest, test_AtomSubstituition) {
     PTRef a = logic.mkBoolVar("a");
     vec<PtAsgn> facts;
     facts.push(PtAsgn{a, l_True});
-    auto subst = logic.retrieveSubstitutions(facts);
+    auto subst = substitutionSimplifier.retrieveSubstitutions(facts);
     ASSERT_TRUE(subst.second.has(a));
     EXPECT_EQ(subst.second[a], logic.getTerm_true());
 }
@@ -111,7 +110,7 @@ TEST_F(RetrieveSubstitutionTest, test_ConstantSubstituition) {
     PTRef eq = logic.mkEq(fx, c);
     vec<PtAsgn> facts;
     facts.push(PtAsgn{eq, l_True});
-    auto subst = logic.retrieveSubstitutions(facts);
+    auto subst = substitutionSimplifier.retrieveSubstitutions(facts);
     ASSERT_TRUE(subst.second.has(fx));
     EXPECT_EQ(subst.second[fx], c);
 }
@@ -124,7 +123,7 @@ TEST_F(RetrieveSubstitutionTest, test_NestedSubstitution) {
     vec<PtAsgn> facts;
     facts.push(PtAsgn{eq, l_True});
     facts.push(PtAsgn{eq2, l_True});
-    auto subst = logic.retrieveSubstitutions(facts);
+    auto subst = substitutionSimplifier.retrieveSubstitutions(facts);
     ASSERT_TRUE(subst.second.has(z));
     ASSERT_TRUE(subst.second.has(y));
     EXPECT_EQ(subst.second[z], fy);
@@ -195,7 +194,8 @@ TEST(SubstitutionTransitiveClosure, test_twoStepSubstitution) {
     substitutions.insert(a, logic.mkAnd(b,c));
     substitutions.insert(b, c);
     substitutions.insert(c, d);
-    logic.substitutionsTransitiveClosure(substitutions);
+    SubstitutionSimplifier substitutionSimplifier(logic);
+    substitutionSimplifier.substitutionsTransitiveClosure(substitutions);
     ASSERT_EQ(substitutions.getSize(), 3);
     ASSERT_EQ(substitutions[a], d);
 }

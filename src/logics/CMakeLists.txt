@@ -17,8 +17,8 @@ target_sources(logics
 	PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/UFLATheory.h"
 	PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/UFLATheory.cc"
 	PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/UFTheory.cc"
-	PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/SubstLoopBreaker.h"
-	PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/SubstLoopBreaker.cc"
+	PRIVATE "../simplifiers/SubstLoopBreaker.h"
+	PRIVATE "../simplifiers/SubstLoopBreaker.cc"
 )
 
 install(FILES LogicFactory.h Theory.h Logic.h ArithLogic.h CUFLogic.h BVLogic.h FunctionTools.h

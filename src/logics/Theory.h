@@ -38,6 +38,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "PartitionManager.h"
 
+#include "SubstitutionSimplifier.h"
+
 // Simplification in frames:
 // A frame F_i consists of:
 //  P_i : a list of asserts given on this frame
@@ -143,26 +145,15 @@ public:
 };
 
 
-class Theory
-{
-  protected:
-    struct SubstitutionResult {
-        Logic::SubstMap usedSubstitution;
-        PTRef result;
-    };
+class Theory {
+    SMTConfig & config;
 
-
-    SMTConfig &         config;
-    PTRef getCollateFunction(const vec<PFRef> & formulas, int curr);
+protected:
     Theory(SMTConfig &c) : config(c) { }
-
     inline bool keepPartitions() const { return config.produce_inter(); }
-
-    /* Computes the final formula from substitution result.
-     * The formula is the computed formula with all substitutions conjoined in form of equalities
-     */
-    PTRef flaFromSubstitutionResult(const SubstitutionResult & sr);
     PTRef applySubstitutionBasedSimplificationIfEnabled(PTRef);
+    PTRef getCollateFunction(const vec<PFRef> & formulas, int curr);
+    virtual SubstitutionSimplifier::SubstitutionResult computeSubstitutions(PTRef fla) { return SubstitutionSimplifier(getLogic()).computeSubstitutions(fla); }
   public:
 
     PushFrameAllocator      pfstore {1024};
@@ -170,7 +161,6 @@ class Theory
     virtual const Logic    &getLogic() const        = 0;
     virtual TSolverHandler &getTSolverHandler()     = 0;
     virtual bool            simplify(const vec<PFRef>&, PartitionManager& pmanager, int) = 0; // Simplify a vector of PushFrames in an incrementality-aware manner
-    SubstitutionResult      computeSubstitutions(PTRef fla);
     void                    printFramesAsQuery(const vec<PFRef> & frames, std::ostream & s) const;
     virtual bool            okToPartition(PTRef) const { return true; }
     virtual                ~Theory() {};
@@ -214,5 +204,6 @@ class CUFTheory : public Theory
     virtual const CUFTHandler& getTSolverHandler() const { return tshandler; }
     virtual bool simplify(const vec<PFRef>&, PartitionManager& pmanager, int) override;
 };
+
 
 #endif

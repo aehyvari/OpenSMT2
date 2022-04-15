@@ -369,9 +369,8 @@ public:
     // Given a sum term 't' returns a normalized inequality 'c <= s' equivalent to '0 <= t'
     PTRef sumToNormalizedInequality(PTRef sum);
     PTRef sumToNormalizedEquality(PTRef sum);
-    lbool arithmeticElimination(vec<PTRef> const & top_level_arith, SubstMap & substitutions);
 
-    opensmt::pair<lbool,SubstMap> retrieveSubstitutions(vec<PtAsgn> const & facts) override;
+
     void termSort(vec<PTRef> &v) const override;
 
     std::string printTerm_(PTRef tr, bool ext, bool s) const override;

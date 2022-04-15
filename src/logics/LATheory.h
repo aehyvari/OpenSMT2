@@ -8,6 +8,7 @@
 #include "ArithmeticEqualityRewriter.h"
 #include "DistinctRewriter.h"
 #include "DivModRewriter.h"
+#include "ArithSubstitutionSimplifier.h"
 
 template<typename LinAlgLogic, typename LinAlgTHandler>
 class LATheory : public Theory
@@ -16,6 +17,7 @@ protected:
     LinAlgLogic& lalogic;
     LinAlgTHandler  latshandler;
     std::unique_ptr<Map<PTRef,bool,PTRefHash>> notOkToPartition;
+    SubstitutionSimplifier::SubstitutionResult computeSubstitutions(PTRef fla) override { return ArithSubstitutionSimplifier(getLogic()).computeSubstitutions(fla); }
 public:
     LATheory(SMTConfig & c, LinAlgLogic & logic)
             : Theory(c)

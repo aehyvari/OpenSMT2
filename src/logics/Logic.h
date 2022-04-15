@@ -392,12 +392,6 @@ public:
     virtual PTRef insertTerm (SymRef sym, vec<PTRef> && args);
     PTRef insertTerm(SymRef sym, vec<PTRef> const & args) { vec<PTRef> tmp; args.copyTo(tmp); return insertTerm(sym, std::move(tmp)); }
 
-    // Top-level equalities based substitutions
-    bool getNewFacts(PTRef root, MapWithKeys<PTRef, lbool, PTRefHash> & facts);
-    virtual opensmt::pair<lbool,SubstMap> retrieveSubstitutions(const vec<PtAsgn>& units);
-
-    void substitutionsTransitiveClosure(SubstMap & substs);
-
     bool contains(PTRef x, PTRef y);  // term x contains an occurrence of y
 
     PTRef learnEqTransitivity(PTRef); // Learn limited transitivity information
