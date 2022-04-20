@@ -12,7 +12,7 @@ class ArithSubstitutionSimplifier : public SubstitutionSimplifier {
     ArithLogic & logic;
     lbool arithmeticElimination(vec<PTRef> const & top_level_arith, Logic::SubstMap & substitutions);
 protected:
-    opensmt::pair<lbool,Logic::SubstMap> retrieveSubstitutions(vec<PtAsgn> const & facts) override;
+    opensmt::pair<lbool,Logic::SubstMap> retrieveSubstitutions(vec<opensmt::pair<PTRef,bool>> const & facts) override;
 public:
     ArithSubstitutionSimplifier(ArithLogic & logic) : SubstitutionSimplifier(logic), logic(logic) {}
 };

@@ -33,17 +33,14 @@ SubstitutionSimplifier::SubstitutionResult SubstitutionSimplifier::computeSubsti
     for (int i = 0; i < 3; i++) {
         // update the current simplification formula
         PTRef simp_formula = root;
-        vec<PtAsgn> current_units_vec;
+        vec<opensmt::pair<PTRef,bool>> current_units_vec;
         // Get U_i
-        auto [rval, new_units] = getNewFacts(simp_formula);
-        if (not rval) {
-            return SubstitutionResult{{}, logic.getTerm_false()};
-        }
+        auto new_units = getNewFacts(simp_formula);
         // Add the newly obtained units to the list of all substitutions
         // Clear the previous units
         const auto & new_units_vec = new_units.getKeys();
         for (PTRef key : new_units_vec) {
-            current_units_vec.push(PtAsgn{key, new_units[key]});
+            current_units_vec.push({key, new_units[key]});
         }
 
         auto [res, newsubsts] = retrieveSubstitutions(current_units_vec);
@@ -92,12 +89,15 @@ SubstitutionSimplifier::SubstitutionResult SubstitutionSimplifier::computeSubsti
 //
 // The substitutions for the term riddance from osmt1
 //
-opensmt::pair<lbool,Logic::SubstMap> SubstitutionSimplifier::retrieveSubstitutions(const vec<PtAsgn>& facts)
+opensmt::pair<lbool,Logic::SubstMap> SubstitutionSimplifier::retrieveSubstitutions(const vec<opensmt::pair<PTRef,bool>>& facts)
 {
     MapWithKeys<PTRef,PtAsgn,PTRefHash> substs;
-    for (auto [tr, sgn] : facts) {
+    for (auto [tr, enabled] : facts) {
+        if (not enabled) {
+            continue;
+        }
         // Join equalities
-        if (logic.isEquality(tr) and sgn == l_True) {
+        if (logic.isEquality(tr)) {
 #ifdef SIMPLIFY_DEBUG
             cerr << "Identified an equality: " << printTerm(tr) << endl;
 #endif
@@ -138,9 +138,12 @@ opensmt::pair<lbool,Logic::SubstMap> SubstitutionSimplifier::retrieveSubstitutio
                     }
                 }
             }
-        } else if (logic.isBoolAtom(tr)) {
-            PTRef term = sgn == l_True ? logic.getTerm_true() : logic.getTerm_false();
-            substs.insert(tr, PtAsgn(term, l_True));
+        } else {
+            auto [pureTr, sign] = purify(tr);
+            if (logic.isBoolAtom(pureTr)) {
+                PTRef term = sign == l_True ? logic.getTerm_true() : logic.getTerm_false();
+                substs.insert(tr, PtAsgn(term, l_True));
+            }
         }
     }
     SubstLoopBreaker slb(logic);
@@ -169,75 +172,82 @@ void SubstitutionSimplifier::substitutionsTransitiveClosure(Logic::SubstMap & su
     }
 }
 
-//
-// TODO: Also this should most likely be dependent on the theory being
-// used.  Depending on the theory a fact should either be added on the
-// top level or left out to reduce e.g. simplex matrix size.
-//
-opensmt::pair<bool,SubstitutionSimplifier::Facts> SubstitutionSimplifier::getNewFacts(PTRef root) {
+namespace {
+    struct PtaIndex {
+        uint32_t idx;
+        PtaIndex(PTId idx, lbool sign) : idx((Idx(idx) << 1) | (sign == l_False)) {}
+    };
+    inline uint32_t Idx(PtaIndex ptai) { return ptai.idx; }
+}
+
+SubstitutionSimplifier::Facts SubstitutionSimplifier::getNewFacts(PTRef root) {
+
+    struct DFSEntry {
+        explicit DFSEntry(PtAsgn termAsgn) : termAsgn(termAsgn) {}
+        PtAsgn termAsgn;
+        int nextChild = 0;
+    };
+
+    auto termMarks = logic.getTermMarks(PtaIndex(logic.getPterm(root).getId(), l_False));
+    std::vector<DFSEntry> toProcess;
+    auto [p, sign] = purify(root);
+    toProcess.emplace_back(PtAsgn{p, sign});
+
     Map<PtAsgn,bool,PtAsgnHash> isdup;
     vec<PtAsgn> queue;
     Facts facts;
-    PTRef p;
-    lbool sign;
-    logic.purify(root, p, sign);
-    queue.push(PtAsgn(p, sign));
 
-    while (queue.size() != 0) {
-        PtAsgn pta = queue.last(); queue.pop();
+    while (not toProcess.empty()) {
+        auto & currentEntry = toProcess.back();
 
-        if (isdup.has(pta)) continue;
-        isdup.insert(pta, true);
+        PtAsgn currentTermAsgn = currentEntry.termAsgn;
+        PTRef currentRef = currentTermAsgn.tr;
+        lbool currentSign = currentTermAsgn.sgn;
+        auto currentId = PtaIndex(logic.getPterm(currentTermAsgn.tr).getId(), currentSign);
 
-        Pterm const & t = logic.getPterm(pta.tr);
+        assert(not termMarks.isMarked(currentId));
 
-        if (logic.isAnd(pta.tr) and pta.sgn == l_True) {
-            for (PTRef l : t) {
-                PTRef c;
-                lbool c_sign;
-                logic.purify(l, c, c_sign);
-                queue.push(PtAsgn(c, c_sign));
-            }
-        } else if (logic.isOr(pta.tr) and (pta.sgn == l_False)) {
-            for (PTRef l : t) {
-                PTRef c;
-                lbool c_sign;
-                logic.purify(l, c, c_sign);
-                queue.push(PtAsgn(c, c_sign ^ true));
-            }
-        } else {
-            lbool prev_val = facts.has(pta.tr) ? facts[pta.tr] : l_Undef;
-            if (prev_val != l_Undef && prev_val != pta.sgn)
-                return {false, std::move(facts)}; // conflict
-            else if (prev_val == pta.sgn)
-                continue; // Already seen
-
-            assert(prev_val == l_Undef);
-            if (logic.isEquality(pta.tr) and pta.sgn == l_True) {
-                facts.insert(pta.tr, pta.sgn);
-            } else if (logic.isUP(pta.tr) and pta.sgn == l_True) {
-                facts.insert(pta.tr, pta.sgn);
-            } else if (logic.isXor(pta.tr) and pta.sgn == l_True) {
-                Pterm const & xorTerm = logic.getPterm(pta.tr);
-                facts.insert(logic.mkEq(xorTerm[0], logic.mkNot(xorTerm[1])), l_True);
-            } else {
-                PTRef c;
-                lbool c_sign;
-                logic.purify(pta.tr, c, c_sign);
-                if (logic.isBoolAtom(c)) {
-                    facts.insert(c, c_sign^(pta.sgn == l_False));
+        Pterm const & term = logic.getPterm(currentRef);
+        int childrenCount = term.size();
+        if (currentEntry.nextChild < childrenCount) {
+            ++currentEntry.nextChild;
+            if (logic.isAnd(currentRef) and currentSign == l_True) {
+                auto [childTr, childSign] = purify(term[currentEntry.nextChild-1]);
+                auto childId = PtaIndex(logic.getPterm(childTr).getId(), childSign);
+                if (not termMarks.isMarked(childId)) {
+                    toProcess.emplace_back(PtAsgn(childTr, childSign));
                 }
+                continue;
+            } else if (logic.isOr(currentRef) and currentSign == l_False) {
+                auto [childTr, childSign] = purify(term[currentEntry.nextChild-1]);
+                auto childId = PtaIndex(logic.getPterm(childTr).getId(), childSign ^ true);
+                if (not termMarks.isMarked(childId)) {
+                    toProcess.emplace_back(PtAsgn(childTr, childSign ^ true));
+                }
+                continue;
             }
         }
+
+        // If we are here, we have already processed all children
+        // Visit
+        assert(not termMarks.isMarked(currentId));
+
+        if (logic.isEquality(currentRef) and currentSign == l_True) {
+            facts.insert(currentRef, true);
+        } else if (logic.isUP(currentRef)) {
+            facts.insert(currentSign == l_True ? currentRef : logic.mkNot(currentRef), true);
+        } else if (logic.isXor(currentRef) and currentSign == l_True) {
+            Pterm const & xorTerm = logic.getPterm(currentRef);
+            facts.insert(logic.mkEq(xorTerm[0], logic.mkNot(xorTerm[1])), true);
+        } else {
+            if (logic.isBoolAtom(currentRef)) {
+                facts.insert(currentSign == l_True ? currentRef : logic.mkNot(currentRef), true);
+            }
+        }
+        termMarks.mark(currentId);
+        toProcess.pop_back();
     }
-    return {true, std::move(facts)};
-#ifdef SIMPLIFY_DEBUG
-    cerr << "True facts" << endl;
-    vec<Map<PTRef,lbool,PTRefHash>::Pair> facts_dbg;
-    facts.getKeysAndVals(facts_dbg);
-    for (int i = 0; i < facts_dbg.size(); i++)
-        cerr << (facts_dbg[i].data == l_True ? "" : "not ") << printTerm(facts_dbg[i].key) << " (" << facts_dbg[i].key.x << ")" << endl;
-#endif
+    return facts;
 }
 
 bool SubstitutionSimplifier::updateSubstitutionClosure(UnionForest & termToNode, std::unordered_set<PTRef, PTRefHash> & toBeSubstituted, MapWithKeys<PTRef,PTRef,PTRefHash> const & rawSubstitutions) {

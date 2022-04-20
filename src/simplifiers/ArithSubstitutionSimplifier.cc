@@ -5,22 +5,20 @@
 #include "ArithSubstitutionSimplifier.h"
 #include "LA.h"
 
-opensmt::pair<lbool,Logic::SubstMap> ArithSubstitutionSimplifier::retrieveSubstitutions(const vec<PtAsgn>& facts) {
+opensmt::pair<lbool,Logic::SubstMap> ArithSubstitutionSimplifier::retrieveSubstitutions(vec<opensmt::pair<PTRef,bool>> const & facts) {
     auto resAndSubsts = SubstitutionSimplifier::retrieveSubstitutions(facts);
     if (resAndSubsts.first != l_Undef) return resAndSubsts;
     vec<PTRef> top_level_arith;
-    for (PtAsgn fact : facts) {
-        PTRef tr = fact.tr;
-        lbool sgn = fact.sgn;
-        if (logic.isNumEq(tr) && sgn == l_True)
+    for (auto [tr, enabled] : facts) {
+        if (logic.isNumEq(tr) && enabled) {
             top_level_arith.push(tr);
+        }
     }
     lbool res = arithmeticElimination(top_level_arith, resAndSubsts.second);
     return {res, std::move(resAndSubsts.second)};
 }
 
-lbool ArithSubstitutionSimplifier::arithmeticElimination(const vec<PTRef> & top_level_arith, Logic::SubstMap & substitutions)
-{
+lbool ArithSubstitutionSimplifier::arithmeticElimination(const vec<PTRef> & top_level_arith, Logic::SubstMap & substitutions) {
     std::vector<std::unique_ptr<LAExpression>> equalities;
     // I don't know if reversing the order makes any sense but osmt1
     // does that.

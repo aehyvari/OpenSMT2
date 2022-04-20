@@ -26,16 +26,16 @@ protected:
 
 TEST_F(GetFactsTest, test_UnitFact){
     PTRef eq = logic.mkEq(x,y);
-    auto [ok, newFacts] = substitutionSimplifier.getNewFacts(eq);
+    auto newFacts = substitutionSimplifier.getNewFacts(eq);
     ASSERT_TRUE(newFacts.has(eq));
-    EXPECT_EQ(newFacts[eq], l_True);
+    EXPECT_EQ(newFacts[eq], true);
 }
 
 TEST_F(GetFactsTest, test_NegatedUnitFact){
     PTRef eq = logic.mkEq(x,y);
     PTRef neq = logic.mkNot(eq);
     // MB: Currently it does not learn inequalities. Should it?
-    auto [ok, newFacts] = substitutionSimplifier.getNewFacts(neq);
+    auto newFacts = substitutionSimplifier.getNewFacts(neq);
 //    ASSERT_TRUE(newFacts.has(neq));
 //    EXPECT_EQ(newFacts[eq], l_True);
 }
@@ -43,9 +43,9 @@ TEST_F(GetFactsTest, test_NegatedUnitFact){
 TEST_F(GetFactsTest, test_NegatedBoolLiteral){
     PTRef var = logic.mkBoolVar("a");
     PTRef neq = logic.mkNot(var);
-    auto [ok, newFacts] = substitutionSimplifier.getNewFacts(neq);
-    ASSERT_TRUE(newFacts.has(var));
-    EXPECT_EQ(newFacts[var], l_False);
+    auto newFacts = substitutionSimplifier.getNewFacts(neq);
+    ASSERT_TRUE(newFacts.has(neq));
+    EXPECT_EQ(newFacts[neq], true);
 }
 
 TEST_F(GetFactsTest, test_MultipleFacts){
@@ -54,13 +54,13 @@ TEST_F(GetFactsTest, test_MultipleFacts){
     PTRef eq = logic.mkEq(x,y);
     PTRef neq = logic.mkNot(eq);
     PTRef conj = logic.mkAnd(a, logic.mkNot(logic.mkOr(b, neq)));
-    auto [ok, newFacts] = substitutionSimplifier.getNewFacts(conj);
+    auto newFacts = substitutionSimplifier.getNewFacts(conj);
     ASSERT_TRUE(newFacts.has(a));
-    ASSERT_TRUE(newFacts.has(b));
+    ASSERT_TRUE(newFacts.has(logic.mkNot(b)));
     ASSERT_TRUE(newFacts.has(eq));
-    EXPECT_EQ(newFacts[a], l_True);
-    EXPECT_EQ(newFacts[b], l_False);
-    EXPECT_EQ(newFacts[eq], l_True);
+    EXPECT_EQ(newFacts[a], true);
+    EXPECT_EQ(newFacts[logic.mkNot(b)], true);
+    EXPECT_EQ(newFacts[eq], true);
 }
 
 //========================== TEST for retrieving sustituitions =========================================================
@@ -89,8 +89,8 @@ protected:
 
 TEST_F(RetrieveSubstitutionTest, test_VarVarSubstituition) {
     PTRef eq = logic.mkEq(x,y);
-    vec<PtAsgn> facts;
-    facts.push(PtAsgn{eq, l_True});
+    vec<opensmt::pair<PTRef,bool>> facts;
+    facts.push({eq, true});
     auto subst = substitutionSimplifier.retrieveSubstitutions(facts);
     ASSERT_TRUE(subst.second.has(x));
     EXPECT_EQ(subst.second[x], y);
@@ -98,8 +98,8 @@ TEST_F(RetrieveSubstitutionTest, test_VarVarSubstituition) {
 
 TEST_F(RetrieveSubstitutionTest, test_AtomSubstituition) {
     PTRef a = logic.mkBoolVar("a");
-    vec<PtAsgn> facts;
-    facts.push(PtAsgn{a, l_True});
+    vec<opensmt::pair<PTRef,bool>> facts;
+    facts.push({a, true});
     auto subst = substitutionSimplifier.retrieveSubstitutions(facts);
     ASSERT_TRUE(subst.second.has(a));
     EXPECT_EQ(subst.second[a], logic.getTerm_true());
@@ -108,8 +108,8 @@ TEST_F(RetrieveSubstitutionTest, test_AtomSubstituition) {
 TEST_F(RetrieveSubstitutionTest, test_ConstantSubstituition) {
     PTRef fx = logic.mkUninterpFun(f, {x});
     PTRef eq = logic.mkEq(fx, c);
-    vec<PtAsgn> facts;
-    facts.push(PtAsgn{eq, l_True});
+    vec<opensmt::pair<PTRef,bool>> facts;
+    facts.push({eq, true});
     auto subst = substitutionSimplifier.retrieveSubstitutions(facts);
     ASSERT_TRUE(subst.second.has(fx));
     EXPECT_EQ(subst.second[fx], c);
@@ -120,9 +120,9 @@ TEST_F(RetrieveSubstitutionTest, test_NestedSubstitution) {
     PTRef fy = logic.mkUninterpFun(f, {y});
     PTRef eq = logic.mkEq(fx, y);
     PTRef eq2 = logic.mkEq(fy, z);
-    vec<PtAsgn> facts;
-    facts.push(PtAsgn{eq, l_True});
-    facts.push(PtAsgn{eq2, l_True});
+    vec<opensmt::pair<PTRef,bool>> facts;
+    facts.push({eq, true});
+    facts.push({eq2, true});
     auto subst = substitutionSimplifier.retrieveSubstitutions(facts);
     ASSERT_TRUE(subst.second.has(z));
     ASSERT_TRUE(subst.second.has(y));

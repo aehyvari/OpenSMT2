@@ -411,8 +411,6 @@ public:
     std::string   printSym          (SymRef sr) const;
     virtual void termSort(vec<PTRef>& v) const;// { sort(v, LessThan_PTRef()); }
 
-    void  purify           (PTRef r, PTRef& p, lbool& sgn) const;//{p = r; sgn = l_True; while (isNot(p)) { sgn = sgn^1; p = getPterm(p)[0]; }}
-
 #ifdef PEDANTIC_DEBUG
     void compareSymStore(SymStore& other) { sym_store.compare(other); }
     void compareIdStore(IdentifierStore& other) {}
