@@ -5,16 +5,20 @@
 #include "ArithSubstitutionSimplifier.h"
 #include "LA.h"
 
-opensmt::pair<lbool,Logic::SubstMap> ArithSubstitutionSimplifier::retrieveSubstitutions(vec<opensmt::pair<PTRef,bool>> const & facts) {
+opensmt::pair<lbool,Logic::SubstMap> ArithSubstitutionSimplifier::retrieveSubstitutions(Facts & facts) {
     auto resAndSubsts = SubstitutionSimplifier::retrieveSubstitutions(facts);
-    if (resAndSubsts.first != l_Undef) return resAndSubsts;
-    vec<PTRef> top_level_arith;
-    for (auto [tr, enabled] : facts) {
-        if (logic.isNumEq(tr) && enabled) {
-            top_level_arith.push(tr);
+    if (resAndSubsts.first != l_Undef) {
+        return resAndSubsts;
+    }
+    int i, j;
+    for (i = j = 0; i < facts.size(); i++) {
+        PTRef tr = facts[i];
+        if (logic.isNumEq(tr)) {
+            facts[j++] = tr;
         }
     }
-    lbool res = arithmeticElimination(top_level_arith, resAndSubsts.second);
+    facts.shrink(i-j);
+    lbool res = arithmeticElimination(facts, resAndSubsts.second);
     return {res, std::move(resAndSubsts.second)};
 }
 

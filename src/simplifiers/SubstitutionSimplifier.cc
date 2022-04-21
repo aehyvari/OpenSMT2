@@ -33,17 +33,10 @@ SubstitutionSimplifier::SubstitutionResult SubstitutionSimplifier::computeSubsti
     for (int i = 0; i < 3; i++) {
         // update the current simplification formula
         PTRef simp_formula = root;
-        vec<opensmt::pair<PTRef,bool>> current_units_vec;
         // Get U_i
         auto new_units = getNewFacts(simp_formula);
-        // Add the newly obtained units to the list of all substitutions
-        // Clear the previous units
-        const auto & new_units_vec = new_units.getKeys();
-        for (PTRef key : new_units_vec) {
-            current_units_vec.push({key, new_units[key]});
-        }
 
-        auto [res, newsubsts] = retrieveSubstitutions(current_units_vec);
+        auto [res, newsubsts] = retrieveSubstitutions(new_units);
 
         // Insert here the closure algorithm.
         std::unordered_set<PTRef,PTRefHash> toBeSubstituted;
@@ -89,13 +82,10 @@ SubstitutionSimplifier::SubstitutionResult SubstitutionSimplifier::computeSubsti
 //
 // The substitutions for the term riddance from osmt1
 //
-opensmt::pair<lbool,Logic::SubstMap> SubstitutionSimplifier::retrieveSubstitutions(const vec<opensmt::pair<PTRef,bool>>& facts)
+opensmt::pair<lbool,Logic::SubstMap> SubstitutionSimplifier::retrieveSubstitutions(Facts & facts)
 {
     MapWithKeys<PTRef,PtAsgn,PTRefHash> substs;
-    for (auto [tr, enabled] : facts) {
-        if (not enabled) {
-            continue;
-        }
+    for (PTRef tr : facts) {
         // Join equalities
         if (logic.isEquality(tr)) {
 #ifdef SIMPLIFY_DEBUG
@@ -233,15 +223,15 @@ SubstitutionSimplifier::Facts SubstitutionSimplifier::getNewFacts(PTRef root) {
         assert(not termMarks.isMarked(currentId));
 
         if (logic.isEquality(currentRef) and currentSign == l_True) {
-            facts.insert(currentRef, true);
+            facts.push(currentRef);
         } else if (logic.isUP(currentRef)) {
-            facts.insert(currentSign == l_True ? currentRef : logic.mkNot(currentRef), true);
+            facts.push(currentSign == l_True ? currentRef : logic.mkNot(currentRef));
         } else if (logic.isXor(currentRef) and currentSign == l_True) {
             Pterm const & xorTerm = logic.getPterm(currentRef);
-            facts.insert(logic.mkEq(xorTerm[0], logic.mkNot(xorTerm[1])), true);
+            facts.push(logic.mkEq(xorTerm[0], logic.mkNot(xorTerm[1])));
         } else {
             if (logic.isBoolAtom(currentRef)) {
-                facts.insert(currentSign == l_True ? currentRef : logic.mkNot(currentRef), true);
+                facts.push(currentSign == l_True ? currentRef : logic.mkNot(currentRef));
             }
         }
         termMarks.mark(currentId);
