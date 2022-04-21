@@ -90,8 +90,10 @@ class Logic {
             innerSet.assure_domain(domainSize);
             innerSet.reset();
         }
-        inline void mark(PTId id) { innerSet.insert(Idx(id)); }
-        inline bool isMarked(PTId id) const { return innerSet.contains(Idx(id)); }
+        template<typename IdxType>
+        inline void mark(IdxType id) { innerSet.insert(Idx(id)); }
+        template<typename IdxType>
+        inline bool isMarked(IdxType id) const { return innerSet.contains(Idx(id)); }
     };
     mutable nat_set     auxiliaryNatSet;
 
@@ -195,7 +197,8 @@ class Logic {
      *
      * Relies on a term invariant that id of a child is lower than id of a parent.
      */
-    TermMarks getTermMarks(PTId maxTermId) const { return TermMarks(auxiliaryNatSet, Idx(maxTermId) + 1); }
+    template<typename IdxType>
+    TermMarks getTermMarks(IdxType maxTermId) const { return TermMarks(auxiliaryNatSet, Idx(maxTermId) + 1); }
     // Default values for the logic
 
     // Deprecated! Use getDefaultValuePTRef instead
