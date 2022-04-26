@@ -319,6 +319,10 @@ protected:
     double              var_inc;          // Amount to bump next variable with.
     OccLists<Lit, vec<Watcher>, WatcherDeleted>  watches;          // 'watches[lit]' is a list of constraints watching 'lit' (will go there if literal becomes true).
     vec<lbool>          assigns;          // The current assignments (lbool:s stored as char:s).
+    vec<bool>           saved_polar;
+    int                 longest_trail = 0;
+    int longest_flip = 0;;
+    int myinv = 0;
     vec<bool>           var_seen;
     vec<char>           polarity;         // The preferred polarity of each variable.
     vec<char>           decision;         // Declares if a variable is eligible for selection in the decision heuristic.
@@ -381,10 +385,14 @@ protected:
     bool     enqueue          (Lit p, CRef from = CRef_Undef);                         // Test if fact 'p' contradicts current state, enqueue otherwise.
     CRef     propagate        ();                                                      // Perform unit propagation. Returns possibly conflicting clause.
     virtual void cancelUntil  (int level);                                             // Backtrack until a certain level.
-    void     analyze          (CRef confl, vec<Lit>& out_learnt, int& out_btlevel);    // (bt = backtrack)
+    void     analyze          (CRef confl, vec<Lit>& out_learnt, int& out_btlevel, uint32_t& oug_glue);    // (bt = backtrack)
+    uint32_t calc_glue(const vec<Lit>& ps);
+    uint64_t MYFLAG = 0;
+    vec<uint64_t> permDiff;
     void     analyzeFinal     (Lit p, vec<Lit>& out_conflict);                         // COULD THIS BE IMPLEMENTED BY THE ORDINARIY "analyze" BY SOME REASONABLE GENERALIZATION?
     bool     litRedundant     (Lit p, uint32_t abstract_levels);                       // (helper method for 'analyze()')
-    lbool    search           (int nof_conflicts, int nof_learnts);                    // Search for a given number of conflicts.
+    lbool    search           (int nof_conflicts);                    // Search for a given number of conflicts.
+    int nof_learnts = 40000;
     virtual bool okContinue   () const;                                                // Check search termination conditions
     virtual ConsistencyAction notifyConsistency() { return ConsistencyAction::NoOp; }  // Called when the search has reached a consistent point
     virtual void notifyEnd() { }                                                       // Called at the end of the search loop
