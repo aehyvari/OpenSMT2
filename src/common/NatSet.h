@@ -23,15 +23,13 @@ Revision History:
 #include <climits>
 #include <vector>
 
-
 class nat_set {
-    unsigned          m_curr_timestamp;
+    bool              inUse = false;
+    unsigned          m_curr_timestamp = 0;
     std::vector<unsigned> m_timestamps;
 
 public:
-    nat_set(unsigned s = 0):
-            m_curr_timestamp(0),
-            m_timestamps() {
+    nat_set(unsigned s = 0) {
         if (s > 0) {
             m_timestamps.resize(s, 0);
         }
@@ -67,11 +65,16 @@ public:
     }
 
     void reset() {
+        assert(not inUse);
+        inUse = true;
         m_curr_timestamp++;
         if (m_curr_timestamp == UINT_MAX) {
             std::fill(m_timestamps.begin(), m_timestamps.end(), 0);
             m_curr_timestamp = 0;
         }
+    }
+    void release() {
+        inUse = false;
     }
 
     bool empty() const {

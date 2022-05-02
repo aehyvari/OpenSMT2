@@ -74,6 +74,7 @@ LRAModel::popBounds()
 void LRAModel::clear() {
     this->current_assignment.clear();
     this->last_consistent_assignment.clear();
+    this->changed_vars_set.release();
     this->changed_vars_set.reset();
     this->changed_vars_vec.clear();
     this->int_lbounds.clear();

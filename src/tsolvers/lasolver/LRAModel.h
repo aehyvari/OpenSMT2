@@ -78,6 +78,7 @@ public:
             last_consistent_assignment[getVarId(v)] = current_assignment[getVarId(v)];
         }
         changed_vars_vec.clear();
+        changed_vars_set.release();
         changed_vars_set.reset();
     }
 
@@ -87,6 +88,7 @@ public:
             current_assignment[getVarId(v)] = last_consistent_assignment[getVarId(v)];
         }
         changed_vars_vec.clear();
+        changed_vars_set.release();
         changed_vars_set.reset();
     }
 
