@@ -411,7 +411,7 @@ TRes LASolver::checkIntegersAndSplit() {
     }
 
     static double seed = 123;
-    LVRef chosen = drand(seed) < 0.02 ? splitOnRandom(varsToFix) : splitOnMostInfeasible(varsToFix);
+    LVRef chosen = drand(seed) < 0.2 ? splitOnRandom(varsToFix) : splitOnMostInfeasible(varsToFix);
 
     assert(chosen != LVRef::Undef);
     auto splitLowerVal = simplex.getValuation(chosen).R().floor();
