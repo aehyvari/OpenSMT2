@@ -410,8 +410,9 @@ TRes LASolver::checkIntegersAndSplit() {
         }
     }
 
-    static double seed = 123;
-    LVRef chosen = drand(seed) < 0.4 ? splitOnRandom(varsToFix) : splitOnMostInfeasible(varsToFix);
+//    static double seed = 123;
+//    LVRef chosen = drand(seed) < 0.4 ? splitOnRandom(varsToFix) : splitOnMostInfeasible(varsToFix);
+    LVRef chosen = splitOnRandom(varsToFix);
 
     assert(chosen != LVRef::Undef);
     auto splitLowerVal = simplex.getValuation(chosen).R().floor();
