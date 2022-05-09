@@ -169,11 +169,6 @@ class Clause {
                 calcAbstraction(); }
     }
 
-    void setGlue(const uint32_t glue) {
-        assert(glue < 8);
-        header.glue = glue;
-    }
-
 public:
     void calcAbstraction() {
         assert(header.has_extra);
@@ -209,6 +204,10 @@ public:
     void         strengthen  (Lit p);
     uint32_t     getGlue() const {
         return header.glue;
+    }
+    void setGlue(const uint32_t glue) {
+        assert(glue < 8);
+        header.glue = glue;
     }
     bool         getVivif() const {
         return header.vivifed;
