@@ -160,6 +160,7 @@ private:
     bool shouldTryCutFromProof() const;
 
     void getSuggestions( vec<PTRef>& dst, SolverId solver_id );                                   // find possible suggested atoms
+    bool wouldDeduce(PtAsgn pta) const; // Would setting this assignment deduce more bounds
     void getSimpleDeductions(LVRef v, LABoundRef);      // find deductions from actual bounds position
     unsigned getIteratorByPTRef( PTRef e, bool );                                                 // find bound iterator by the PTRef
     inline bool getStatus( );                               // Read the status of the solver in lbool
@@ -181,9 +182,11 @@ private:
 
     inline int     verbose                       ( ) const { return config.verbosity(); }
 
+    void deduce(LABoundRef bound_prop);
+    bool wouldDeduce(LABoundRef bound_prop) const;
+
     // Debug stuff
     void isProperLeq(PTRef tr);  // The Leq term conforms to the assumptions of its form.  Only asserts.
-    void deduce(LABoundRef bound_prop);
 };
 
 #endif
