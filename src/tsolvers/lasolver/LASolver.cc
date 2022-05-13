@@ -636,16 +636,15 @@ bool LASolver::wouldDeduce(PtAsgn asgn) const {
     LABound const & bound = boundStore[boundRef];
 
     auto searchForUnassignedBound = [this, &bound, &v](BoundT type) {
-        for (int it = bound.getIdx().x - 1; it >= 0; -- it) {
-            LABoundRef candidateRef = boundStore.getBoundByIdx(v, it);
+        int newId = bound.getIdx().x + (type == bound_l ? -2 : 2);
+        if (newId < 0 or newId > boundStore.getBounds(v).size() - 1) {
+            return false;
+        } else {
+            LABoundRef candidateRef = boundStore.getBoundByIdx(v, newId);
             LABound const & candidate = boundStore[candidateRef];
-            if (candidate.getType() != type) {
-                continue;
-            } else if (not hasPolarity(getAsgnByBound(candidateRef).tr)) {
-                return true;
-            }
+            assert(candidate.getType() == type);
+            return (not hasPolarity(getAsgnByBound(candidateRef).tr));
         }
-        return false;
     };
 
     if (bound.getType() == bound_l) {
