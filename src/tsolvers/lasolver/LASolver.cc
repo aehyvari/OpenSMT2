@@ -641,8 +641,7 @@ bool LASolver::wouldDeduce(PtAsgn asgn) const {
             return false;
         } else {
             LABoundRef candidateRef = boundStore.getBoundByIdx(v, newId);
-            LABound const & candidate = boundStore[candidateRef];
-            assert(candidate.getType() == type);
+            assert(boundStore[candidateRef].getType() == type);
             return (not hasPolarity(getAsgnByBound(candidateRef).tr));
         }
     };
