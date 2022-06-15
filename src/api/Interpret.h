@@ -139,7 +139,7 @@ class Interpret {
     // Named terms for getting variable values
     MapWithKeys<const char*,PTRef,StringHash,Equal<const char*>> nameToTerm;
     VecMap<PTRef,const char*,PTRefHash,Equal<PTRef> > termToNames;
-    vec<char*>      term_names; // For (! <t> :named <n>) constructs.  if Itp is enabled, this maps a
+    std::vector<std::string> term_names; // For (! <t> :named <n>) constructs.  if Itp is enabled, this maps a
                                             // partition to it name.
     vec<PTRef>      assertions;
     vec<SymRef>     user_declarations;
@@ -150,16 +150,16 @@ class Interpret {
     SRef                        sortFromASTNode(ASTNode const & n) const;
     static SortSymbol           sortSymbolFromASTNode(ASTNode const & node);
 
-    void                        setInfo(ASTNode& n);
-    void                        getInfo(ASTNode& n);
-    void                        setOption(ASTNode& n);
-    void                        getOption(ASTNode& n);
-    void                        writeState(const char* fname);
+    void                        setInfo(ASTNode const & n);
+    void                        getInfo(ASTNode const & n);
+    void                        setOption(ASTNode const & n);
+    void                        getOption(ASTNode const & n);
+    void                        writeState(std::string const & fname);
     bool                        declareFun(ASTNode const & n); //(const char* fname, const vec<SRef>& args);
-    bool                        declareConst(ASTNode& n); //(const char* fname, const SRef ret_sort);
-    bool                        defineFun(const ASTNode& n);
+    bool                        declareConst(ASTNode const & n); //(const char* fname, const SRef ret_sort);
+    bool                        defineFun(ASTNode const & n);
     virtual sstat               checkSat();
-    void                        getValue(const std::vector<ASTNode*>* term);
+    void                        getValue(std::vector<ASTNode> const & term);
     void                        getModel();
     std::string                 printDefinitionSmtlib(PTRef tr, PTRef val);
     std::string                 printDefinitionSmtlib(const TemplateFunction &templateFun) const;
@@ -172,7 +172,7 @@ class Interpret {
 
     virtual void                exit();
     void                        getInterpolants(const ASTNode& n);
-    void                        interp (ASTNode& n);
+    void                        interp (ASTNode const & n);
 
     void                        notify_formatted(bool error, const char* s, ...);
     void                        notify_success();
@@ -182,7 +182,7 @@ class Interpret {
     PTRef                       letNameResolve(const char* s, const LetRecords& letRecords) const;
     PTRef                       resolveQualifiedIdentifier(const char * name, ASTNode const & sort, bool isQuoted);
 
-    virtual std::unique_ptr<MainSolver>   createMainSolver(const char* logic_name);
+    virtual std::unique_ptr<MainSolver>   createMainSolver(std::string const & logic_name);
 
   public:
 
@@ -190,8 +190,6 @@ class Interpret {
         : config     (c)
         , f_exit     (false)
         { }
-
-    ~Interpret();
 
     int interpFile(FILE* in);
     int interpFile(char *content);
