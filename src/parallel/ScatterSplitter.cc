@@ -299,7 +299,6 @@ void ScatterSplitter::runPeriodic()
     if (not getChannel().isClauseShareMode()) return;
     std::vector<PTPLib::net::Lemma> toPublishLemmas;
     if (getChannel().shouldLearnClauses()) {
-        getChannel().clearShouldLearnClauses();
 
         if (exposeClauses(toPublishLemmas)) {
             {
