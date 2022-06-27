@@ -137,8 +137,7 @@ class Interpret {
     bool            f_exit;
 
     // Named terms for getting variable values
-    MapWithKeys<const char*,PTRef,StringHash,Equal<const char*>> nameToTerm;
-    VecMap<PTRef,const char*,PTRefHash,Equal<PTRef> > termToNames;
+    std::unordered_map<std::string,PTRef> nameToTerm;
     std::vector<std::string> term_names; // For (! <t> :named <n>) constructs.  if Itp is enabled, this maps a
                                             // partition to it name.
     vec<PTRef>      assertions;
@@ -159,7 +158,7 @@ class Interpret {
     bool                        declareConst(ASTNode const & n); //(const char* fname, const SRef ret_sort);
     bool                        defineFun(ASTNode const & n);
     virtual sstat               checkSat();
-    void                        getValue(std::vector<ASTNode> const & term);
+    void                        getValue(std::vector<std::unique_ptr<ASTNode>> const & term);
     void                        getModel();
     std::string                 printDefinitionSmtlib(PTRef tr, PTRef val);
     std::string                 printDefinitionSmtlib(const TemplateFunction &templateFun) const;
@@ -195,7 +194,7 @@ class Interpret {
     int interpFile(char *content);
     int interpPipe();
 
-    void    execute(const ASTNode* n);
+    void    execute(ASTNode const & n);
     bool    gotExit() const { return f_exit; }
 
     ValPair getValue       (PTRef tr) const;
