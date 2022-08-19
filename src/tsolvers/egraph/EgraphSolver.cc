@@ -152,7 +152,6 @@ lbool Egraph::getPolaritySuggestion(PTRef p)
     if (term.size() > 2) { return l_Undef; } // For now focus on 2 arguments
     PTRef lhs = term[0];
     PTRef rhs = term[1];
-    assert(enode_store.has(lhs) && enode_store.has(rhs));
     if (!enode_store.has(lhs) || !enode_store.has(rhs)) { return l_Undef; }
     ERef e_lhs = termToERef(lhs);
     ERef e_rhs = termToERef(rhs);
@@ -275,7 +274,7 @@ void Egraph::declareTerm(PTRef tr) {
     }
 
     if (logic.hasSortBool(tr)) {
-        setKnown(tr);
+        setInformed(tr);
     }
 }
 
