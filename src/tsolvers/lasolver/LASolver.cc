@@ -627,6 +627,31 @@ bool LASolver::setStatus( LASolverStatus s )
     return getStatus( );
 }
 
+bool LASolver::wouldDeduce(PtAsgn asgn) const {
+    assert(status != INIT);
+    assert(logic.isLeq(asgn.tr));
+    assert(not hasPolarity(asgn.tr));
+    LVRef v = getVarForLeq(asgn.tr);
+    LABoundRef boundRef = asgn.sgn == l_False ? getBoundRefPair(asgn.tr).neg : getBoundRefPair(asgn.tr).pos;
+    LABound const & bound = boundStore[boundRef];
+
+    auto searchForUnassignedBound = [this, &bound, &v](BoundT type) {
+        int newId = bound.getIdx().x + (type == bound_l ? -2 : 2);
+        if (newId < 0 or newId > boundStore.getBounds(v).size() - 1) {
+            return false;
+        } else {
+            LABoundRef candidateRef = boundStore.getBoundByIdx(v, newId);
+            assert(boundStore[candidateRef].getType() == type);
+            return (not hasPolarity(getAsgnByBound(candidateRef).tr));
+        }
+    };
+
+    if (bound.getType() == bound_l) {
+        return searchForUnassignedBound(bound_u);
+    }
+    assert(bound.getType() == bound_u);
+    return searchForUnassignedBound(bound_l);
+}
 
 void LASolver::getSimpleDeductions(LVRef v, LABoundRef br)
 {
