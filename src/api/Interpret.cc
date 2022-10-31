@@ -323,7 +323,10 @@ void Interpret::interp(CheckSatNode const &) {
         notify_formatted(true, "Illegal command before set-logic: check-sat");
         return;
     }
+    (void)checkSat();
+}
 
+sstat Interpret::checkSat() {
     sstat res;
     res = main_solver->check();
 
@@ -353,6 +356,7 @@ void Interpret::interp(CheckSatNode const &) {
         if (!o_dump_state.isEmpty() && o_split == spt_none)
             writeState(name);
     }
+    return res;
 }
 
 namespace {
