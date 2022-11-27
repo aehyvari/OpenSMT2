@@ -553,8 +553,8 @@ PTRef Interpret::parseTerm(const ASTNode& term, LetRecords& letRecords) {
 }
 
 sstat Interpret::checkSat() {
-    sstat res;
-    res = main_solver->check();
+    sstat res = s_Undef;
+//    res = main_solver->check();
 
     if (res == s_True) {
         notify_formatted(false, "sat");
