@@ -1,5 +1,13 @@
-### 2.4.3 (unreleased)
+### 2.5.0 (unreleased)
 
+
+
+### 2.4.3 (2022-11-21)
+
+Bug fixes:
+ - UFLA: Fix unsoundness bug due to LASolver not signalling the presence of conflict correctly
+ - ArithLogic: Fix substitution computation in the presence of uninterpreted functions
+ - Logic: Evaluate `distinct` function on constant arguments (required for model evaluation)
 
 ### 2.4.2 (2022-10-24)
 

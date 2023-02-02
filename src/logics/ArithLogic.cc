@@ -10,6 +10,7 @@
 #include "StringConv.h"
 #include "TreeOps.h"
 
+#include <map>
 #include <memory>
 #include <sstream>
 
@@ -341,9 +342,15 @@ PTRef polyToPTRef(ArithLogic & logic, poly_t const & poly) {
 }
 
 Logic::SubstMap collectSingleEqualitySubstitutions(ArithLogic & logic, std::vector<poly_t> & zeroPolynomials) {
-    Logic::SubstMap substitutions;
-    std::unordered_map<PTRef, std::vector<std::size_t>, PTRefHash> varToPolyIndices;
+    // MB: We enforce order to ensure that later-created terms are processed first.
+    //     This ensures that from an equality "f(x) = x" we get a substitution "f(x) -> x" and not the other way
+    //     around, which would cause infinite cycle in transitive closure
+    struct PTRefGreaterThan {
+        bool operator()(PTRef first, PTRef second) const { return first.x > second.x; }
+    };
+    std::map<PTRef, std::vector<std::size_t>, PTRefGreaterThan> varToPolyIndices;
 
+    Logic::SubstMap substitutions;
     for (std::size_t i = 0; i < zeroPolynomials.size(); ++i) {
         auto const & poly = zeroPolynomials[i];
         for (auto const & term : poly) {
@@ -538,7 +545,6 @@ PTRef ArithLogic::mkConst(SRef sort, opensmt::Number const & c)
 
 PTRef ArithLogic::mkMinus(vec<PTRef> && args)
 {
-    SRef sort = checkArithSortCompatible(args);
     assert(args.size() > 0);
     if (args.size() == 1) {
         return mkNeg(args[0]);
@@ -546,9 +552,7 @@ PTRef ArithLogic::mkMinus(vec<PTRef> && args)
     assert(args.size() == 2);
     if (args.size() > 2) { throw OsmtApiException("Too many terms provided to LALogic::mkNumMinus"); }
 
-    PTRef mo = getMinusOneForSort(sort);
-
-    PTRef fact = mkTimes(mo, args[1]);
+    PTRef fact = mkNeg(args[1]);
     assert(fact != PTRef_Undef);
     args[1] = fact;
     return mkPlus(std::move(args));
@@ -1079,21 +1083,16 @@ void SimplifyConstDiv::constSimplify(SymRef s, vec<PTRef> const & terms, SymRef 
     s_new = s;
 }
 
-// Return a term corresponding to the operation applied to the constant
-// terms.  The list may contain terms of the form (* -1 a) for constant
-// a.
-PTRef SimplifyConst::simplifyConstOp(const vec<PTRef> & terms)
-{
-    if (terms.size() == 0) {
-        opensmt::Number s = getIdOp();
-        return l.mkConst(l.getSortRef(terms[0]), s);
-    } else if (terms.size() == 1) {
+// Returns a term corresponding to the operation applied to the constant terms.
+PTRef SimplifyConst::simplifyConstOp(vec<PTRef> const & terms) {
+    assert(terms.size() != 0);
+    if (terms.size() == 1) {
         return terms[0];
     } else {
         opensmt::Number s = l.getNumConst(terms[0]);
-        for (int i = 1; i < terms.size(); i++) {
+        for (int i = 1; i < terms.size(); ++i) {
             assert(l.isConstant((terms[i])));
-            opensmt::Number const& val = l.getNumConst(terms[i]);
+            opensmt::Number const & val = l.getNumConst(terms[i]);
             Op(s, val);
         }
         return l.mkConst(l.getSortRef(terms[0]), s);

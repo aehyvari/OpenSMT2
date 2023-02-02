@@ -35,6 +35,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "ScopedVector.h"
 
 #include <unordered_map>
+#include <string>
 
 class DefinedFunctions {
     std::unordered_map<std::string,TemplateFunction> defined_functions;
@@ -65,32 +66,28 @@ public:
 
 class LetBinder {
     PTRef currentValue;
-    std::vector<PTRef>* shadowedValues;
+    vec<PTRef> shadowedValues;
 public:
-    LetBinder(PTRef val) : currentValue(val), shadowedValues(nullptr) {}
-    ~LetBinder() { delete shadowedValues; }
+    LetBinder(PTRef val) : currentValue(val) {}
     LetBinder(const LetBinder&) = delete;
     LetBinder& operator=(const LetBinder&) = delete;
     LetBinder(LetBinder&&) = default;
     LetBinder& operator=(LetBinder&&) = default;
     PTRef getValue() const { return currentValue; }
-    bool hasShadowValue() const { return shadowedValues && !shadowedValues->empty(); }
-    void restoreShadowedValue() { assert(hasShadowValue()); currentValue = shadowedValues->back(); shadowedValues->pop_back(); }
+    bool hasShadowValue() const { return shadowedValues.size() != 0; }
+    void restoreShadowedValue() { currentValue = shadowedValues.last(); shadowedValues.pop(); }
     void addValue(PTRef val) {
-        if (not shadowedValues) {
-            shadowedValues = new std::vector<PTRef>();
-        }
-        shadowedValues->push_back(currentValue);
+        shadowedValues.push(currentValue);
         currentValue = val;
     }
 };
 
 class LetRecords {
-    std::unordered_map<const char*, LetBinder, StringHash, Equal<const char*> > letBinders;
-    std::vector<const char*> knownBinders;
+    std::unordered_map<std::string, LetBinder> letBinders;
+    std::vector<std::string> knownBinders;
     std::vector<std::size_t> frameLimits;
 
-    bool has(const char* name) const { return letBinders.count(name) != 0; }
+    bool has(std::string const & name) const { return letBinders.find(name) != letBinders.end(); }
 public:
     PTRef getOrUndef(const char* letSymbol) const {
         auto it = letBinders.find(letSymbol);
@@ -104,7 +101,7 @@ public:
         auto limit = frameLimits.back();
         frameLimits.pop_back();
         while (knownBinders.size() > limit) {
-            const char* binder = knownBinders.back();
+            std::string binder = std::move(knownBinders.back());
             knownBinders.pop_back();
             assert(this->has(binder));
             auto& values = letBinders.at(binder);
@@ -116,13 +113,18 @@ public:
         }
     }
 
-    void addBinding(const char* name, PTRef arg) {
-        knownBinders.push_back(name);
+    /**
+     * Bind `name` to `arg` in this let scope.
+     * @param name
+     * @param arg
+     */
+    void addBinding(std::string const & name, PTRef arg) {
         if (not this->has(name)) {
-            letBinders.insert(std::make_pair(name, LetBinder(arg)));
+            letBinders.insert({name, LetBinder(arg)});
         } else {
             letBinders.at(name).addValue(arg);
         }
+        knownBinders.push_back(name);
     }
 };
 
@@ -135,9 +137,8 @@ class Interpret {
     bool            f_exit;
 
     // Named terms for getting variable values
-    MapWithKeys<const char*,PTRef,StringHash,Equal<const char*>> nameToTerm;
-    VecMap<PTRef,const char*,PTRefHash,Equal<PTRef> > termToNames;
-    vec<char*>      term_names; // For (! <t> :named <n>) constructs.  if Itp is enabled, this maps a
+    std::unordered_map<std::string,PTRef> nameToTerm;
+    std::vector<std::string> term_names; // For (! <t> :named <n>) constructs.  if Itp is enabled, this maps a
                                             // partition to it name.
     vec<PTRef>      assertions;
     vec<SymRef>     user_declarations;
@@ -145,42 +146,52 @@ class Interpret {
 
     void                        initializeLogic(opensmt::Logic_t logicType);
     bool                        isInitialized() const { return logic != nullptr; }
-    SRef                        sortFromASTNode(ASTNode const & n) const;
-    static SortSymbol           sortSymbolFromASTNode(ASTNode const & node);
 
-    void                        setInfo(ASTNode& n);
-    void                        getInfo(ASTNode& n);
-    void                        setOption(ASTNode& n);
-    void                        getOption(ASTNode& n);
-    void                        writeState(const char* fname);
-    bool                        declareFun(ASTNode const & n); //(const char* fname, const vec<SRef>& args);
-    bool                        declareConst(ASTNode& n); //(const char* fname, const SRef ret_sort);
-    bool                        defineFun(const ASTNode& n);
-    virtual sstat               checkSat();
-    void                        getValue(const std::vector<ASTNode*>* term);
-    void                        getModel();
+    void                        writeState(std::string const & fname);
     std::string                 printDefinitionSmtlib(PTRef tr, PTRef val);
     std::string                 printDefinitionSmtlib(const TemplateFunction &templateFun) const;
-    void                        push(int);
-    void                        pop(int);
 
-    PTRef                       parseTerm(const ASTNode& term, LetRecords& letRecords);
+    PTRef                       parseTerm(TermNode const & term, LetRecords& letRecords);
+    PTRef                       parseTerm(NormalTermNode const * term, LetRecords & letRecords);
+    PTRef                       parseTerm(LetTermNode const * term, LetRecords & letRecords);
+    PTRef                       parseTerm(ForallNode const * term, LetRecords & letRecords);
+    PTRef                       parseTerm(ExistsNode const * term, LetRecords & letRecords);
+    PTRef                       parseTerm(AnnotationNode const * term, LetRecords & letRecords);
     PTRef                       resolveTerm(const char* s, vec<PTRef>&& args, SRef sortRef = SRef_Undef, SymbolMatcher symbolMatcher = SymbolMatcher::Any);
     bool                        storeDefinedFun(std::string const & fname, const vec<PTRef>& args, SRef ret_sort, const PTRef tr);
 
     virtual void                exit();
-    void                        getInterpolants(const ASTNode& n);
-    void                        interp (ASTNode& n);
-
+    void                        interp(SetLogic const & n);
+    void                        interp(SetInfo const & n);
+    void                        interp(SetOption const & n);
+    void                        interp(GetInfo const & n);
+    void                        interp(GetOption const & n);
+    void                        interp(DeclareSort const & n);
+    void                        interp(DeclareFun const & n);
+    void                        interp(DeclareConst const & n);
+    void                        interp(AssertNode const & n);
+    void                        interp(DefineFun const & n);
+    void                        interp(Simplify const & n);
+    void                        interp(CheckSatNode const & n);
+    void                        interp(GetInterpolants const & n);
+    void                        interp(GetAssignment const & n);
+    void                        interp(GetValue const & n);
+    void                        interp(GetModel const & n);
+    void                        interp(Echo const & n);
+    void                        interp(PushNode const & n);
+    void                        interp(PopNode const & n);
+    void                        interp(Exit const & n);
     void                        notify_formatted(bool error, const char* s, ...);
     void                        notify_success();
     void                        comment_formatted(const char* s, ...) const;
 
-    bool                        addLetFrame(const vec<char *> & names, vec<PTRef> const& args, LetRecords& letRecords);
+    bool                        addLetFrame(std::vector<opensmt::pair<PTRef, std::string>> const & bindings, LetRecords& letRecords);
     PTRef                       letNameResolve(const char* s, const LetRecords& letRecords) const;
-    PTRef                       resolveQualifiedIdentifier(const char * name, ASTNode const & sort, bool isQuoted);
+    PTRef                       resolveQualifiedIdentifier(std::string const & name, SortNode const & sort, bool isQuoted);
+    SRef sortFromSortNode(SortNode const & node) const;
 
-    virtual std::unique_ptr<MainSolver>   createMainSolver(const char* logic_name);
+    virtual sstat checkSat();
+    virtual std::unique_ptr<MainSolver>   createMainSolver(std::string const & logic_name);
 
   public:
 
@@ -189,17 +200,12 @@ class Interpret {
         , f_exit     (false)
         { }
 
-    ~Interpret();
-
+    void interp(CommandNode const * n);
     int interpFile(FILE* in);
     int interpFile(char *content);
     int interpPipe();
 
-    void    execute(const ASTNode* n);
     bool    gotExit() const { return f_exit; }
-
-    ValPair getValue       (PTRef tr) const;
-    bool    getAssignment  ();
 
     void    reportError(char const * msg) { notify_formatted(true, msg); }
 
